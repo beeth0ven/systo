@@ -15,7 +15,8 @@
     "dist"
   ],
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
+    "registry": "https://npm.pkg.github.com",
+    "access": "public"
   },
   "repository": {
     "type": "git",
@@ -38,7 +39,8 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
-    "release:alpha": "pnpm test && pnpm run build && changelogen --prerelease alpha && npm publish"
+    "changelog:preview": "changelogen --prerelease alpha",
+    "release:alpha": "pnpm test && changelogen --release --prerelease alpha && npm publish && git push --follow-tags"
   },
   "packageManager": "pnpm@10.33.2",
   "devDependencies": {
