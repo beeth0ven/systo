@@ -1,0 +1,55 @@
+{
+  "name": "systo",
+  "version": "0.1.0-alpha.1",
+  "description": "Composable reactive state systems for fluid UIs and stateful AI agents",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/beeth0ven/systo.git"
+  },
+  "keywords": [
+    "state-management",
+    "reactive",
+    "agent",
+    "ai-agent",
+    "langgraph",
+    "streams"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prepublishOnly": "pnpm run build",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "release:alpha": "pnpm test && pnpm run build && npm version prerelease --preid=alpha && npm publish"
+  },
+  "packageManager": "pnpm@10.33.2",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.6",
+    "repomix": "^1.18.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0",
+    "vitest": "^4.1.9"
+  }
+}
