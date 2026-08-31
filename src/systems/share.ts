@@ -24,8 +24,11 @@ interface SharedState<State, Event> {
  * 1. The Intermediary Shared Connection Store.
  * Since it is a 1:1 connection to the upstream source, it perfectly extends BasePipeStore.
  */
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-class SharedSourceStore<State, Event> extends BasePipeStore<{}, State, Event> implements Observable<State> {
+class SharedSourceStore<State, Event>
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  extends BasePipeStore<{}, State, Event>
+  implements Observable<State>
+{
   private _latestState?: State;
   private _hasState = false;
   private readonly _observers = new Set<Observer<State>>();

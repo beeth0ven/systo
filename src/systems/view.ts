@@ -105,7 +105,7 @@ class ViewStore<State, Event, LocalState, SourceState, SourceEvent> extends Base
   protected _onNext(sourceState: SourceState): void {
     this._setSourceState(sourceState);
   }
-  
+
   protected _onDispatch(event: Event | readonly Event[]): void {
     this._dispatchDepth += 1;
     try {
