@@ -1,6 +1,18 @@
 # Changelog
 
 
+## v0.1.0-alpha.4
+
+[compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.3...v0.1.0-alpha.4)
+
+### 📦 Build
+
+- Simplify release:alpha script by using changelogen --push flag ([f01785d](https://github.com/beeth0ven/systo/commit/f01785d))
+
+### ❤️ Contributors
+
+- Beeth0ven ([@beeth0ven](https://github.com/beeth0ven))
+
 ## v0.1.0-alpha.3
 
 [compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)

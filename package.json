@@ -1,6 +1,6 @@
 {
   "name": "@beeth0ven/systo",
-  "version": "0.1.0-alpha.3",
+  "version": "0.1.0-alpha.4",
   "description": "Composable reactive state systems for fluid UIs and stateful AI agents",
   "type": "module",
   "main": "./dist/index.js",
