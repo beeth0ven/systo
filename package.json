@@ -41,7 +41,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
     "changelog:preview": "changelogen --prerelease alpha",
-    "release:alpha": "pnpm test && changelogen --release --prerelease alpha && npm publish --tag alpha && git push --follow-tags"
+    "release:alpha": "pnpm test && changelogen --release --push --prerelease alpha && npm publish --tag alpha"
   },
   "packageManager": "pnpm@10.33.2",
   "devDependencies": {
