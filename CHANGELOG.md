@@ -1,6 +1,27 @@
 # Changelog
 
 
+## v0.1.0-alpha.3
+
+[compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.2...v0.1.0-alpha.3)
+
+### 📖 Documentation
+
+- Update README with GitHub Packages registry and improved formatting ([f4895a9](https://github.com/beeth0ven/systo/commit/f4895a9))
+
+### 📦 Build
+
+- Update release script and publish configuration ([8906730](https://github.com/beeth0ven/systo/commit/8906730))
+- Add alpha tag to npm publish configuration ([d933ab6](https://github.com/beeth0ven/systo/commit/d933ab6))
+
+### 🏡 Chore
+
+- **release:** V0.1.0-alpha.2 ([06ec8e1](https://github.com/beeth0ven/systo/commit/06ec8e1))
+
+### ❤️ Contributors
+
+- Beeth0ven <m13477051442@gmail.com>
+
 ## v0.1.0-alpha.2
 
 
