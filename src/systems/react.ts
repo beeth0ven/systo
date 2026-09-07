@@ -1,4 +1,4 @@
-import { Disposable, Operator } from '../core.js';
+import { Operator, Teardown } from '../core.js';
 
 interface ReactConfig<Request, State, Event> {
   /**
@@ -14,7 +14,7 @@ interface ReactConfig<Request, State, Event> {
   effect: (
     request: Request,
     dispatch: (event: Event | readonly Event[]) => void,
-  ) => Disposable | (() => void) | void;
+  ) => Teardown;
 
   /**
    * Optional equality comparator (defaults to reference/shallow equality `===`).
