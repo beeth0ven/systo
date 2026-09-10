@@ -75,6 +75,7 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
     current: Request | undefined | null,
   ): boolean {
     if (previous === current) return true;
+    if (previous == null && current == null) return true;
     if (previous != null && current != null && this._config.areEqual != null) {
       return this._config.areEqual(previous, current);
     }
@@ -89,8 +90,11 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
   }
 
   private _disposeEffect() {
-    this._activeEffect?.dispose();
-    this._activeEffect = null;
+    const activeEffect = this._activeEffect;
+    if (activeEffect) {
+      this._activeEffect = null;
+      activeEffect.dispose();
+    }
   }
 
   private _createEffect(request: Request): Disposable {

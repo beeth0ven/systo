@@ -1,5 +1,5 @@
 import { Observer, Store, System } from '../core.js';
-import { InitScheduler } from '../utils/index.js';
+import { InitScheduler, TrampolineScheduler } from '../utils/index.js';
 
 abstract class BaseSystem<Config, State, Event> implements System<State, Event> {
   constructor(protected readonly _config: Config) {}
@@ -54,7 +54,12 @@ abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
     if (Array.isArray(event) && event.length == 0) {
       return;
     }
-    this._onDispatch(event);
+    TrampolineScheduler.schedule(() => {
+      if (this._isDisposed) {
+        return;
+      }
+      this._onDispatch(event);
+    });
   }
 
   protected abstract _onDispatch(event: Event | readonly Event[]): void;

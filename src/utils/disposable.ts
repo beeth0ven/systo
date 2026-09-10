@@ -4,13 +4,28 @@ const emptyDisposable: Disposable = Object.freeze({
   dispose() {},
 });
 
-function toDisposable(teardown: Teardown): Disposable {
-  if (typeof teardown === 'function') {
-    return { dispose: teardown };
-  } else if (teardown) {
-    return teardown;
+function disposable(dispose: () => void): Disposable {
+  let isDisposed = false;
+  return {
+    dispose: () => {
+      if (isDisposed) return;
+      isDisposed = true;
+      dispose();
+    }
   }
-  return emptyDisposable;
 }
 
-export { emptyDisposable, toDisposable };
+/**
+ * Normalizes any Teardown/DisposableLike into a safe, idempotent Disposable.
+ */
+function toDisposable(teardown: Teardown): Disposable {
+  if (typeof teardown === 'function') {
+    return disposable(teardown);
+  } else if (teardown) {
+    return teardown;
+  } else {
+    return emptyDisposable;
+  }
+}
+
+export { emptyDisposable, disposable, toDisposable };
