@@ -21,7 +21,7 @@ function disposable(dispose: () => void): Disposable {
 function toDisposable(teardown: Teardown): Disposable {
   if (typeof teardown === 'function') {
     return disposable(teardown);
-  } else if (teardown) {
+  } else if (teardown && typeof teardown.dispose === 'function') {
     return teardown;
   } else {
     return emptyDisposable;
