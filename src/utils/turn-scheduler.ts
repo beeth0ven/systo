@@ -85,6 +85,7 @@ class TurnScheduler {
   }
 
   private static _hasFrame(target: object, kind: TaskKind): boolean {
+    // TODO: improve algorithm to avoid O(n) search for re-entrant frames
     for (let i = this._stack.length - 1; i >= 0; i--) {
       const frame = this._stack[i];
       if (frame.target === target && frame.kind === kind) {
