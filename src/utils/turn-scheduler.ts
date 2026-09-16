@@ -5,6 +5,39 @@ interface StackFrame {
   kind: ActionKind;
 }
 
+/**
+ * Synchronous Call-Stack Turn Scheduler enforcing Run-To-Completion (RTC) semantics
+ * across tree initializations, internal pipeline forwarding, and feedback loops.
+ *
+ * ### Architectural Model:
+ * Rather than relying on blunt global locks or isolated per-instance flags, `TurnScheduler`
+ * maintains an active **execution call stack** of `StackFrame` items (`target` + `kind`).
+ * Re-entrancy decisions are evaluated deterministically against the top active frame (`last`)
+ * and duplicate presence on the stack.
+ *
+ * ### Transition Rules Matrix:
+ * 1. **`last.kind === 'init'` (Initialization Phase):**
+ *    - Any subsequent call to `emit` or `dispatch` is classified as **re-entrant** and queued.
+ *    - State emissions during store setup are automatically deferred until the entire
+ *      system subscription tree has synchronously connected.
+ *
+ * 2. **`last.kind === 'emit'` (Downward Emission Phase):**
+ *    - **Any** call to `dispatch` (from observers, effects, or other stores) is classified as
+ *      **re-entrant** and queued for the subsequent turn (guarantees RTC).
+ *    - A call to `emit` for a `target` that **already exists on the stack** with `kind === 'emit'`
+ *      is classified as **re-entrant** and queued (prevents re-emit cascades and infinite loops).
+ *    - Calls to `emit` on downstream targets flow synchronously down the call stack.
+ *
+ * 3. **`last.kind === 'dispatch'` (Upward Forwarding Phase):**
+ *    - A call to `dispatch` for a `target` that **already exists on the stack** with `kind === 'dispatch'`
+ *      is classified as **re-entrant** and queued (prevents recursive dispatch loops on the same store).
+ *    - Calls to `dispatch` on upstream sources (`_send`) and calls to `emit` (reducers updating state)
+ *      are **not re-entrant** and execute synchronously on the call stack (preserves atomic batching).
+ *
+ * 4. **`stack.length === 0` (Idle Phase):**
+ *    - Any call begins a new primary turn, executes immediately, and triggers a queue drain once
+ *      the call stack returns to 0.
+ */
 class TurnScheduler {
   private static readonly _stack: StackFrame[] = [];
   private static readonly _queue: (() => void)[] = [];
