@@ -1,5 +1,5 @@
 import { Disposable, Observable, Observer, Operator } from '../core.js';
-import { InitScheduler } from '../utils/init-scheduler.js';
+import { TurnScheduler } from '../utils/index.js';
 import { BasePipeStore, PipeConfig } from './base-pipe.js';
 import { BaseStore, BaseSystem } from './base.js';
 
@@ -44,7 +44,7 @@ class SharedSourceStore<State, Event>
   observe(observer: Observer<State>): Disposable {
     this._observers.add(observer);
     if (this._hasState) {
-      InitScheduler.schedulePostInitSync(() => {
+      TurnScheduler.scheduleEmit(this, () => {
         if (this._observers.has(observer)) {
           observer.next(this._latestState as State);
         }
@@ -58,7 +58,14 @@ class SharedSourceStore<State, Event>
   protected _onNext(sourceState: State): void {
     this._latestState = sourceState;
     this._hasState = true;
-    this._observers.forEach((observer) => observer.next(sourceState));
+    TurnScheduler.scheduleEmit(this, () => {
+      const observers = [...this._observers];
+      for (const observer of observers) {
+        if (this._observers.has(observer)) {
+          observer.next(sourceState);
+        }
+      }
+    });
   }
 
   protected _onDispatch(event: Event | readonly Event[]): void {

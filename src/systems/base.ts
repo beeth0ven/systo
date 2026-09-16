@@ -1,5 +1,5 @@
 import { Observer, Store, System } from '../core.js';
-import { InitScheduler, TrampolineScheduler } from '../utils/index.js';
+import { TurnScheduler } from '../utils/index.js';
 
 abstract class BaseSystem<Config, State, Event> implements System<State, Event> {
   constructor(protected readonly _config: Config) {}
@@ -15,12 +15,6 @@ abstract class BaseSystem<Config, State, Event> implements System<State, Event> 
 
 /**
  * Base implementation of a Store representing an active stream subscription.
- *
- * ### Initialization Contract:
- * - `_onInit()` must only contain pure synchronous initialization logic (e.g., subscribing to upstream sources).
- * - **Do not** trigger synchronous state emissions (`next`) or cleanup procedures (`dispose`) directly inside `_onInit()`.
- * - Any synchronous emissions or teardown logic occurring during setup must be wrapped in `InitScheduler.schedulePostInitSync(...)`
- *   to ensure the entire subscription tree is established first.
  */
 abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
   protected _isDisposed: boolean = false;
@@ -35,7 +29,7 @@ abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
       return;
     }
     this._isInitialized = true;
-    InitScheduler.scheduleInit(() => this._onInit());
+    TurnScheduler.scheduleInit(this, () => this._onInit());
   }
 
   protected _onInit(): void {}
@@ -44,7 +38,10 @@ abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
     if (this._isDisposed) {
       return;
     }
-    this._observer.next(state);
+    TurnScheduler.scheduleEmit(this, () => {
+      if (this._isDisposed) return;
+      this._observer.next(state);
+    });
   }
 
   dispatch(event: Event | readonly Event[]): void {
@@ -54,7 +51,7 @@ abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
     if (Array.isArray(event) && event.length == 0) {
       return;
     }
-    TrampolineScheduler.schedule(() => {
+    TurnScheduler.scheduleDispatch(this, () => {
       if (this._isDisposed) {
         return;
       }
