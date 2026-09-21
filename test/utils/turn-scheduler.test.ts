@@ -1,8 +1,8 @@
-import { describe, expect, it } from "vitest";
-import { TurnScheduler } from "../../src/index.js";
+import { describe, expect, it } from 'vitest';
+import { TurnScheduler } from '../../src/index.js';
 
-describe("TurnScheduler", () => {
-  describe('Rule4: Idle Phase (stack.length === 0)', () => {
+describe('TurnScheduler', () => {
+  describe('Rule 4: Idle Phase (stack.length === 0)', () => {
     it('executes scheduleInit immediately and returns the value', () => {
       const target = {};
       let executed = false;
@@ -13,6 +13,7 @@ describe("TurnScheduler", () => {
       expect(executed).toBe(true);
       expect(result).toBe(42);
     });
+
     it('executes scheduleEmit immediately', () => {
       const target = {};
       const logs: string[] = [];
@@ -21,6 +22,7 @@ describe("TurnScheduler", () => {
       });
       expect(logs).toEqual(['emit']);
     });
+
     it('executes scheduleDispatch immediately', () => {
       const target = {};
       const logs: string[] = [];
@@ -29,6 +31,7 @@ describe("TurnScheduler", () => {
       });
       expect(logs).toEqual(['dispatch']);
     });
+
     it('treats distinct objects with identical properties as distinct targets', () => {
       const target1 = { id: 1 };
       const target2 = { id: 1 };
@@ -43,13 +46,14 @@ describe("TurnScheduler", () => {
       });
 
       expect(logs).toEqual([
-        'target1:start', 
-        'target2:start', 
-        'target1:end'
+        'target1:start',
+        'target2:start',
+        'target1:end',
       ]);
     });
   });
-  describe('Rule1: Initialization Phase (last.kind === "init")', () => {
+
+  describe('Rule 1: Initialization Phase (last.kind === "init")', () => {
     it('queues scheduleEmit called during init and executes it after init completes', () => {
       const target = { name: 'store' };
       const logs: string[] = [];
@@ -65,12 +69,13 @@ describe("TurnScheduler", () => {
       logs.push('after:init');
 
       expect(logs).toEqual([
-        'init:start', 
-        'init:end', 
-        'emit', 
-        'after:init'
+        'init:start',
+        'init:end',
+        'emit',
+        'after:init',
       ]);
     });
+
     it('queues scheduleDispatch called during init and executes it after init completes', () => {
       const target = { name: 'store' };
       const logs: string[] = [];
@@ -86,17 +91,18 @@ describe("TurnScheduler", () => {
       logs.push('after:init');
 
       expect(logs).toEqual([
-        'init:start', 
-        'init:end', 
-        'dispatch', 
-        'after:init'
+        'init:start',
+        'init:end',
+        'dispatch',
+        'after:init',
       ]);
     });
+
     it('preserves FIFO ordering of multiple emits and dispatches queued during init', () => {
       const targetA = { name: 'storeA' };
       const targetB = { name: 'storeB' };
       const logs: string[] = [];
-      
+
       TurnScheduler.scheduleInit(targetA, () => {
         logs.push('init');
         TurnScheduler.scheduleEmit(targetA, () => logs.push('emit:A'));
@@ -108,9 +114,10 @@ describe("TurnScheduler", () => {
         'init',
         'emit:A',
         'dispatch:B',
-        'emit:B'
+        'emit:B',
       ]);
     });
+
     it('defers queued tasks until the outermost init completes during nested initializations', () => {
       const parent = { name: 'parent' };
       const child = { name: 'child' };
@@ -138,6 +145,7 @@ describe("TurnScheduler", () => {
         'parent:emit',
       ]);
     });
+
     it('correctly returns values from nested scheduleInit calls', () => {
       const parent = { name: 'parent' };
       const child = { name: 'child' };
@@ -151,7 +159,8 @@ describe("TurnScheduler", () => {
       expect(result).toBe('parent-ready:child-ready');
     });
   });
-  describe('Rule2: Downward Emission Phase (last.kind === "emit")', () => {
+
+  describe('Rule 2: Downward Emission Phase (last.kind === "emit")', () => {
     it('executes downward scheduleEmit for a different target synchronously on the call stack', () => {
       const upstream = { name: 'upstream' };
       const downstream = { name: 'downstream' };
@@ -168,30 +177,34 @@ describe("TurnScheduler", () => {
       expect(logs).toEqual([
         'upstream:emit:start',
         'downstream:emit',
-        'upstream:emit:end'
+        'upstream:emit:end',
       ]);
     });
-    it('queues any scheduleDispatch called during emit', () => {
+
+    it('queues any scheduleDispatch called during emit (RTC guarantee for observer reactions)', () => {
       const source = { name: 'source' };
+      const otherTarget = { name: 'other' };
       const logs: string[] = [];
 
       TurnScheduler.scheduleEmit(source, () => {
         logs.push('source:emit:start');
-        TurnScheduler.scheduleDispatch(source, () => {
+        // Any dispatch (even to a different target) must be queued during emit
+        TurnScheduler.scheduleDispatch(otherTarget, () => {
           logs.push('observer:dispatch');
         });
         logs.push('source:emit:end');
       });
 
       logs.push('after:emit');
-      
+
       expect(logs).toEqual([
         'source:emit:start',
         'source:emit:end',
         'observer:dispatch',
-        'after:emit'
+        'after:emit',
       ]);
     });
+
     it('queues re-entrant scheduleEmit for the same target to prevent infinite loops', () => {
       const store = { name: 'store' };
       const logs: string[] = [];
@@ -207,10 +220,11 @@ describe("TurnScheduler", () => {
       expect(logs).toEqual([
         'emit:start',
         'emit:end',
-        're-entrant:emit'
+        're-entrant:emit',
       ]);
     });
-    it('detect cyclic emit chains across multiple targets and queue re-entrant emits', () => {
+
+    it('detects cyclic emit chains across multiple targets and queues re-entrant emits', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const logs: string[] = [];
@@ -232,10 +246,11 @@ describe("TurnScheduler", () => {
         'storeB:emit:start',
         'storeB:emit:end',
         'storeA:emit:end',
-        'storeA:re-entrant:emit'
+        'storeA:re-entrant:emit',
       ]);
     });
-    it('detect re-entrant emit across deep call stacks (A -> B -> C -> A)', () => {
+
+    it('detects re-entrant emit across deep call stacks (A -> B -> C -> A)', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const storeC = { name: 'storeC' };
@@ -264,10 +279,11 @@ describe("TurnScheduler", () => {
         'storeC:emit:end',
         'storeB:emit:end',
         'storeA:emit:end',
-        'storeA:re-entrant:emit'
+        'storeA:re-entrant:emit',
       ]);
     });
-    it('execute multiple dispatches triggered during emit in FIFO order after emission completes', () => {
+
+    it('executes multiple dispatches triggered during emit in FIFO order after emission completes', () => {
       const store = { name: 'store' };
       const logs: string[] = [];
 
@@ -278,17 +294,18 @@ describe("TurnScheduler", () => {
         TurnScheduler.scheduleDispatch(store, () => logs.push('dispatch:3'));
         logs.push('emit:end');
       });
-      
+
       expect(logs).toEqual([
         'emit:start',
         'emit:end',
         'dispatch:1',
         'dispatch:2',
-        'dispatch:3'
+        'dispatch:3',
       ]);
     });
   });
-  describe('Rule3: Upward Forwarding Phase (last.kind === "dispatch")', () => {
+
+  describe('Rule 3: Upward Forwarding Phase (last.kind === "dispatch")', () => {
     it('executes upward scheduleDispatch for a different target synchronously on the call stack', () => {
       const viewStore = { name: 'viewStore' };
       const rootStore = { name: 'rootStore' };
@@ -303,15 +320,16 @@ describe("TurnScheduler", () => {
       });
 
       expect(logs).toEqual([
-        'viewStore:dispatch:start', 
-        'rootStore:dispatch', 
-        'viewStore:dispatch:end'
+        'viewStore:dispatch:start',
+        'rootStore:dispatch',
+        'viewStore:dispatch:end',
       ]);
     });
-    it('execute scheduleEmit synchronously during dispatch', () => {
+
+    it('executes scheduleEmit synchronously during dispatch (state reduction)', () => {
       const store = { name: 'store' };
       const logs: string[] = [];
-      
+
       TurnScheduler.scheduleDispatch(store, () => {
         logs.push('dispatch:start');
         TurnScheduler.scheduleEmit(store, () => {
@@ -323,9 +341,10 @@ describe("TurnScheduler", () => {
       expect(logs).toEqual([
         'dispatch:start',
         'emit',
-        'dispatch:end'
+        'dispatch:end',
       ]);
     });
+
     it('queues observer dispatches that occur during synchronous state emission within dispatch', () => {
       const store = { name: 'store' };
       const logs: string[] = [];
@@ -345,9 +364,10 @@ describe("TurnScheduler", () => {
         'dispatch:start',
         'emit',
         'dispatch:end',
-        'observer:dispatch'
+        'observer:dispatch',
       ]);
     });
+
     it('queues re-entrant scheduleDispatch for the same target to prevent infinite loops', () => {
       const store = { name: 'store' };
       const logs: string[] = [];
@@ -363,10 +383,11 @@ describe("TurnScheduler", () => {
       expect(logs).toEqual([
         'dispatch:start',
         'dispatch:end',
-        're-entrant:dispatch'
+        're-entrant:dispatch',
       ]);
     });
-    it('detect cyclic dispatch chains across multiple targets and queue re-entrant dispatch', () => {
+
+    it('detects cyclic dispatch chains across multiple targets and queues re-entrant dispatch', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const logs: string[] = [];
@@ -388,10 +409,11 @@ describe("TurnScheduler", () => {
         'storeB:dispatch:start',
         'storeB:dispatch:end',
         'storeA:dispatch:end',
-        'storeA:re-entrant:dispatch'
+        'storeA:re-entrant:dispatch',
       ]);
     });
-    it('detect re-entrant dispatch across deep call stacks (A -> B -> C -> A)', () => {
+
+    it('detects re-entrant dispatch across deep call stacks (A -> B -> C -> A)', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const storeC = { name: 'storeC' };
@@ -420,12 +442,13 @@ describe("TurnScheduler", () => {
         'storeC:dispatch:end',
         'storeB:dispatch:end',
         'storeA:dispatch:end',
-        'storeA:re-entrant:dispatch'
+        'storeA:re-entrant:dispatch',
       ]);
     });
   });
+
   describe('Queue Draining & Cascading Tasks', () => {
-    it('handles tasks queued during queue draining phase in FIFO order', () => {
+    it('handles tasks queued during the queue draining phase in FIFO order', () => {
       const store = { name: 'store' };
       const logs: string[] = [];
 
@@ -449,7 +472,8 @@ describe("TurnScheduler", () => {
         'drain:task3',
       ]);
     });
-    it('maintains correct FIFO order across mixed kind of cascading tasks', () => {
+
+    it('maintains correct FIFO order across mixed kinds of cascading tasks', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const logs: string[] = [];
@@ -475,8 +499,9 @@ describe("TurnScheduler", () => {
       ]);
     });
   });
+
   describe('Error Handling and State Recovery', () => {
-    it('resets state and rethrows when scheduleInit throws', () => {
+    it('resets state and re-throws when scheduleInit throws', () => {
       const target = {};
       const error = new Error('Init failed');
 
@@ -492,21 +517,22 @@ describe("TurnScheduler", () => {
       });
       expect(recovered).toBe(true);
     });
-    it('clear pending tasks and reset state when scheduleInit throws after queueing tasks', () => {
+
+    it('clears pending tasks and resets state when scheduleInit throws after queuing tasks', () => {
       const target = {};
       const error = new Error('Init failed');
-      let queuedEmitRun = false;
+      let queuedEmitRan = false;
 
       expect(() => {
         TurnScheduler.scheduleInit(target, () => {
           TurnScheduler.scheduleEmit(target, () => {
-            queuedEmitRun = true;
+            queuedEmitRan = true;
           });
           throw error;
         });
       }).toThrow(error);
 
-      expect(queuedEmitRun).toBe(false);
+      expect(queuedEmitRan).toBe(false);
 
       let recovered = false;
       TurnScheduler.scheduleDispatch(target, () => {
@@ -514,21 +540,22 @@ describe("TurnScheduler", () => {
       });
       expect(recovered).toBe(true);
     });
-    it('resets state, clears pending tasks, and rethrows when scheduleEmit throws', () => {
+
+    it('resets state, clears pending tasks, and re-throws when scheduleEmit throws', () => {
       const target = {};
       const error = new Error('Emit failed');
-      let queuedRun = false;
-      
+      let queuedRan = false;
+
       expect(() => {
         TurnScheduler.scheduleEmit(target, () => {
           TurnScheduler.scheduleDispatch(target, () => {
-            queuedRun = true;
+            queuedRan = true;
           });
           throw error;
         });
       }).toThrow(error);
 
-      expect(queuedRun).toBe(false);
+      expect(queuedRan).toBe(false);
 
       let recovered = false;
       TurnScheduler.scheduleEmit(target, () => {
@@ -536,21 +563,22 @@ describe("TurnScheduler", () => {
       });
       expect(recovered).toBe(true);
     });
-    it('resets state, clears pending tasks, and rethrows when scheduleDispatch throws', () => {
+
+    it('resets state, clears pending tasks, and re-throws when scheduleDispatch throws', () => {
       const target = {};
       const error = new Error('Dispatch failed');
-      let queuedRun = false;
+      let queuedRan = false;
 
       expect(() => {
         TurnScheduler.scheduleDispatch(target, () => {
           TurnScheduler.scheduleDispatch(target, () => {
-            queuedRun = true;
+            queuedRan = true;
           });
           throw error;
         });
       }).toThrow(error);
 
-      expect(queuedRun).toBe(false);
+      expect(queuedRan).toBe(false);
 
       let recovered = false;
       TurnScheduler.scheduleDispatch(target, () => {
@@ -558,23 +586,24 @@ describe("TurnScheduler", () => {
       });
       expect(recovered).toBe(true);
     });
-    it('recover cleanly when a queued task throws during draining', () => {
+
+    it('recovers cleanly when a queued task throws during draining', () => {
       const target = {};
       const error = new Error('Draining task failed');
-      let secondQueuedTaskRun = false;
-      
+      let secondQueuedTaskRan = false;
+
       expect(() => {
         TurnScheduler.scheduleEmit(target, () => {
           TurnScheduler.scheduleDispatch(target, () => {
             throw error;
           });
           TurnScheduler.scheduleDispatch(target, () => {
-            secondQueuedTaskRun = true;
+            secondQueuedTaskRan = true;
           });
         });
       }).toThrow(error);
 
-      expect(secondQueuedTaskRun).toBe(false);
+      expect(secondQueuedTaskRan).toBe(false);
 
       let recovered = false;
       TurnScheduler.scheduleEmit(target, () => {
@@ -582,7 +611,8 @@ describe("TurnScheduler", () => {
       });
       expect(recovered).toBe(true);
     });
-    it('recover cleanly when a nested synchronous frame throws', () => {
+
+    it('recovers cleanly when a nested synchronous frame throws', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const error = new Error('Nested frame failed');
@@ -602,8 +632,9 @@ describe("TurnScheduler", () => {
       expect(recovered).toBe(true);
     });
   });
-  describe('Complex Iteration & Reactive Pipeline Simulation', () => {
-    it('simulate a complete reactive pipeline preserving RTC semantics', () => {
+
+  describe('Complex Interaction & Reactive Pipeline Simulation', () => {
+    it('simulates a complete reactive pipeline preserving RTC semantics', () => {
       const storeA = { name: 'storeA' };
       const storeB = { name: 'storeB' };
       const logs: string[] = [];
@@ -646,14 +677,14 @@ describe("TurnScheduler", () => {
         });
         logs.push('storeB:dispatch:action1:done');
       });
-      
+
       expect(logs).toEqual([
         'storeB:dispatch:action1',
         'storeA:dispatch:action1',
         'storeA:emit:state1',
         'storeB:emit:state1',
         'storeB:dispatch:action1:done',
-        'storeB:dispatch:action2'
+        'storeB:dispatch:action2',
       ]);
     });
   });
