@@ -1,5 +1,5 @@
 import { Observer, System } from '../core.js';
-import { applyReduce, InitScheduler } from '../utils/index.js';
+import { applyReduce } from '../utils/index.js';
 import { BaseStore, BaseSystem } from './base.js';
 
 interface ScanConfig<State, Event> {
@@ -22,7 +22,7 @@ class ScanStore<State, Event> extends BaseStore<ScanConfig<State, Event>, State,
 
   protected _onInit(): void {
     this._state = this._config.initialState;
-    InitScheduler.schedulePostInitSync(() => this._emit(this._state));
+    this._emit(this._state);
   }
 
   protected _onDispatch(event: Event | readonly Event[]): void {
