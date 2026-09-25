@@ -10,8 +10,8 @@ interface ReactConfig<Request, State, Event> {
   request: (state: State) => Request | undefined | null;
 
   /**
-   * Executes the side-effect when a new distinct query is produced.
-   * Can return a optional `Disposable` to cancel the pending operation.
+   * Executes the side-effect when a new distinct request is produced.
+   * Can return an optional `Teardown` (a `Disposable`, a cleanup function, or void) to cancel the pending operation.
    */
   effect: (request: Request, dispatch: (event: Event | readonly Event[]) => void) => Teardown;
 
