@@ -19,7 +19,7 @@ describe('React', () => {
           react({
             request: (state) => state.query,
             effect: (query) => {
-              log(`effect:start:${query}`)
+              log(`effect:start:${query}`);
               return () => log(`effect:teardown:${query}`);
             }
           })
@@ -94,7 +94,7 @@ describe('React', () => {
     type State = { task: string | null };
     type Event = string;
     
-    it('should support Disposable object return from effect', async () => {
+    it('should support Disposable object returned from effect', async () => {
       await runSystemTest<State, Event, State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
@@ -102,7 +102,9 @@ describe('React', () => {
             request: (state) => state.task,
             effect: (task) => {
               log(`effect:start:${task}`);
-              return () => log(`effect:teardown:${task}`);
+              return {
+                dispose: () => log(`effect:teardown:${task}`),
+              };
             }
           }),
         ),
@@ -120,7 +122,7 @@ describe('React', () => {
 
           [30, 'in',  'dispose'],
           [30, 'out', 'log', 'effect:teardown:task2'],
-          [30, 'out', 'source.dispose']
+          [30, 'out', 'source.dispose'],
         ],
       })
     });
@@ -147,12 +149,12 @@ describe('React', () => {
           [20, 'out', 'next', { task: 'task2' }],
 
           [30, 'in',  'dispose'],
-          [30, 'out', 'source.dispose']
+          [30, 'out', 'source.dispose'],
         ],
       })
     });
   });
-  describe('Asynchronous Effect & Feedback Loop', () => {
+  describe('Asynchronous Effects & Feedback Loop', () => {
     type State = {
       userId: string | null,
       userName?: string,
@@ -196,7 +198,7 @@ describe('React', () => {
 
           [50, 'in',  'dispose'],
           [50, 'out', 'log', 'fetch:cancel:u1'],
-          [50, 'out', 'source.dispose']
+          [50, 'out', 'source.dispose'],
         ],
       });
     });
@@ -233,6 +235,7 @@ describe('React', () => {
 
           [50, 'out', 'log', 'fetch:complete:u2'],
           [50, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u2' }],
+          // TODO: see https://github.com/beeth0ven/systo/issues/2
           [51, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
           [51, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
 
@@ -275,12 +278,13 @@ describe('React', () => {
 
           [50, 'out', 'log', 'stale:timer:u2'],
           [50, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u2' }],
+          // TODO: see https://github.com/beeth0ven/systo/issues/2
           [51, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
           [51, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
 
           [60, 'in',  'dispose'],
           [60, 'out', 'log', 'fetch:cancel:u2'],
-          [60, 'out', 'source.dispose']
+          [60, 'out', 'source.dispose'],
         ],
       });
 
@@ -388,7 +392,7 @@ describe('React', () => {
         ],
       })
     });
-    it('should re-trigger effect when areEqual is not provided and request return a new object reference', async () => {
+    it('should re-trigger effect when areEqual is not provided and request returns a new object reference', async () => {
       await runSystemTest<State, Event, State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
@@ -474,7 +478,7 @@ describe('React', () => {
           [20, 'in',  'dispatch', []],
 
           [30, 'in',  'dispose'],
-          [30, 'out', 'source.dispose']
+          [30, 'out', 'source.dispose'],
         ],
       });
     });
@@ -533,7 +537,6 @@ describe('React', () => {
       store2.dispose();
       expect(logs).toEqual(['effect:cancel:r1', 'effect:cancel:r2']);
       expect(sourceDisposers[1]).toHaveBeenCalledTimes(1);
-
     });
   });
 })
