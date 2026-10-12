@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { runSystemTest } from "../test-utils.js";
-import { Observer, pipe, react, System } from "../../src/index.js";
+import { Observer, pipe, react, Store, System } from "../../src/index.js";
 
 describe('React', () => {
   describe('Effect Lifecycle & Execution', () => {
@@ -153,6 +153,45 @@ describe('React', () => {
         ],
       })
     });
+
+    it('should immediately dispose effect if store is disposed synchronously during effect creation', async () => {
+      await runSystemTest<State, Event, State, Event>({
+        systemFactory: (mockSource, log) => {
+          let store: Store<State, Event>;
+          const system = pipe(
+            mockSource,
+            react({
+              request: (state) => state.task,
+              effect: (task) => {
+                log(`effect:start:${task}`);
+                if (task === 'cancel_sync') {
+                  store.dispose();
+                }
+                return () => log(`effect:teardown:${task}`);
+              }
+            })
+          )
+          return {
+            observe: (observer) => (store = system.observe(observer))
+          }
+        },
+        events: [
+          [10, 'in',  'observe'],
+          [10, 'out', 'source.observe'],
+          [10, 'in',  'source.next', { task: 'task1' }],
+          [10, 'out', 'log', 'effect:start:task1'],
+          [10, 'out', 'next', { task: 'task1' }],
+
+          [20, 'in',  'source.next', { task: 'cancel_sync' }],
+          [20, 'out', 'log', 'effect:teardown:task1'],
+          [20, 'out', 'log', 'effect:start:cancel_sync'],
+          [20, 'out', 'source.dispose'],
+          [20, 'out', 'log', 'effect:teardown:cancel_sync'],
+
+          [30, 'in',  'source.next', { task: 'task2' }],
+        ],
+      })
+    })
   });
   describe('Asynchronous Effects & Feedback Loop', () => {
     type State = {
