@@ -1,5 +1,5 @@
-import { Disposable, Observer, Operator, Teardown } from '../core.js';
-import { toDisposable } from '../utils/disposable.js';
+import { Observer, Operator, Teardown } from '../core.js';
+import { SingleAssignmentDisposable, toDisposable } from '../utils/disposable.js';
 import { BasePipeStore, BasePipeSystem } from './base-pipe.js';
 
 interface ReactConfig<Request, State, Event> {
@@ -42,7 +42,7 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
   State,
   Event
 > {
-  private _activeEffect: Disposable | null = null;
+  private _activeEffect: SingleAssignmentDisposable | null = null;
   private _request: Request | undefined | null;
 
   protected _onInit(): void {
@@ -85,7 +85,7 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
   private _runEffect() {
     this._disposeEffect();
     if (this._request != null) {
-      this._activeEffect = this._createEffect(this._request);
+      this._createEffect(this._request);
     }
   }
 
@@ -97,21 +97,22 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
     }
   }
 
-  private _createEffect(request: Request): Disposable {
-    let isDisposed = false;
-    const effect = toDisposable(
-      this._config.effect(request, (event) => {
-        if (isDisposed) return;
+  private _createEffect(request: Request): void {
+    const currentEffect = new SingleAssignmentDisposable();
+    this._activeEffect = currentEffect;
+    try {
+      const teardown = this._config.effect(request, (event) => {
+        if (currentEffect.isDisposed) return;
         this.dispatch(event);
-      }),
-    );
-    return {
-      dispose: () => {
-        if (isDisposed) return;
-        isDisposed = true;
-        effect.dispose();
-      },
-    };
+      })
+      currentEffect.setDisposable(toDisposable(teardown));
+    } catch (error) {
+      currentEffect.dispose();
+      if (this._activeEffect === currentEffect) {
+        this._activeEffect = null;
+      }
+      throw error;
+    }
   }
 }
 
