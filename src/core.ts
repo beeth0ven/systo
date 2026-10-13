@@ -25,4 +25,18 @@ type Operator<State, Event, SourceState = State, SourceEvent = Event> = (
   source: System<SourceState, SourceEvent>,
 ) => System<State, Event>;
 
-export { Disposable, Observer, Observable, Dispatcher, Store, System, Operator };
+
+type DisposableLike = Disposable | (() => void);
+type Teardown = DisposableLike | void;
+
+export {
+  Disposable,
+  Observer,
+  Observable,
+  Dispatcher,
+  Store,
+  System,
+  Operator,
+  DisposableLike,
+  Teardown,
+};
