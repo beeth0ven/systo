@@ -97,15 +97,19 @@ class TurnScheduler {
 
   private static _executeFrame<T>(target: object, kind: ActionKind, action: () => T): T {
     this._stack.push({ target, kind });
+    let succeeded = false;
     try {
-      return action();
-    } catch (error) {
-      this._reset();
-      throw error;
+      const result = action();
+      succeeded = true;
+      return result;
     } finally {
-      if (this._stack.length > 0) {
-        this._stack.pop();
-        this._drainQueueIfNeeded();
+      this._stack.pop();
+      if (this._stack.length === 0) {
+        if (succeeded) {
+          this._drainQueueIfNeeded();
+        } else {
+          this._reset();
+        }
       }
     }
   }
@@ -120,9 +124,7 @@ class TurnScheduler {
         this._executeFrame(target, kind, action);
       }
     } finally {
-      this._queue.length = 0;
-      this._queueHead = 0;
-      this._isDraining = false;
+      this._reset();
     }
   }
 
