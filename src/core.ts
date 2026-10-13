@@ -25,7 +25,6 @@ type Operator<State, Event, SourceState = State, SourceEvent = Event> = (
   source: System<SourceState, SourceEvent>,
 ) => System<State, Event>;
 
-
 type DisposableLike = Disposable | (() => void);
 type Teardown = DisposableLike | void;
 

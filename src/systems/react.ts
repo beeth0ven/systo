@@ -104,7 +104,7 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
       const teardown = this._config.effect(request, (event) => {
         if (currentEffect.isDisposed) return;
         this.dispatch(event);
-      })
+      });
       currentEffect.setDisposable(toDisposable(teardown));
     } catch (error) {
       currentEffect.dispose();
