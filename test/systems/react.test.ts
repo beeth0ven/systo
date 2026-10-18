@@ -231,9 +231,8 @@ describe('React', () => {
 
           [40, 'out', 'log', 'fetch:complete:u1'],
           [40, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u1' }],
-          // TODO: see https://github.com/beeth0ven/systo/issues/2
-          [41, 'in',  'source.next', { userId: 'u1', userName: 'User_u1' }],
-          [41, 'out', 'next', { userId: 'u1', userName: 'User_u1' }],
+          [40, 'in',  'source.next', { userId: 'u1', userName: 'User_u1' }],
+          [40, 'out', 'next', { userId: 'u1', userName: 'User_u1' }],
 
           [50, 'in',  'dispose'],
           [50, 'out', 'log', 'fetch:cancel:u1'],
@@ -274,9 +273,8 @@ describe('React', () => {
 
           [50, 'out', 'log', 'fetch:complete:u2'],
           [50, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u2' }],
-          // TODO: see https://github.com/beeth0ven/systo/issues/2
-          [51, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
-          [51, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
+          [50, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
+          [50, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
 
           [60, 'in',  'dispose'],
           [60, 'out', 'log', 'fetch:cancel:u2'],
@@ -317,9 +315,8 @@ describe('React', () => {
 
           [50, 'out', 'log', 'stale:timer:u2'],
           [50, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u2' }],
-          // TODO: see https://github.com/beeth0ven/systo/issues/2
-          [51, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
-          [51, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
+          [50, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
+          [50, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
 
           [60, 'in',  'dispose'],
           [60, 'out', 'log', 'fetch:cancel:u2'],
