@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { expect, vi } from 'vitest';
 import { Observer, Store, System } from '../src/core.js';
 
@@ -21,7 +22,12 @@ type Output<State, SourceEvent> =
 type TimedInput<Event, SourceState> = [number, ...Input<Event, SourceState>];
 type TimedOutput<State, SourceEvent> = [number, ...Output<State, SourceEvent>];
 
-type SourceDispatchInput<SourceState> = [number, 'source.next', SourceState];
+interface SourceDispatchInput<SourceState, SourceEvent> {
+  time: number;
+  event: SourceEvent | readonly SourceEvent[];
+  emission?: { sourceState: SourceState };
+  consumed: boolean;
+}
 
 type TestEvent<State, Event, SourceState, SourceEvent> =
   [number, 'in', ...Input<Event, SourceState>] | [number, 'out', ...Output<State, SourceEvent>];
@@ -51,7 +57,7 @@ async function runSystemTest<State, Event, SourceState, SourceEvent>(
 
 class Tester<State, Event, SourceState, SourceEvent> {
   public readonly mainInputs: TimedInput<Event, SourceState>[] = [];
-  public readonly sourceDispatchInputs: SourceDispatchInput<SourceState>[] = [];
+  public readonly sourceDispatchInputs: SourceDispatchInput<SourceState, SourceEvent>[] = [];
   public readonly expectedOutputs: TimedOutput<State, SourceEvent>[] = [];
   public readonly outputs: TimedOutput<State, SourceEvent>[] = [];
   private readonly startTime = Date.now();
@@ -68,27 +74,33 @@ class Tester<State, Event, SourceState, SourceEvent> {
   };
 
   constructor(private readonly config: SystemTestConfig<State, Event, SourceState, SourceEvent>) {
-    let previousDispatchTime: number | null = null;
+    let sourceDispatchInput: SourceDispatchInput<SourceState, SourceEvent> | null = null;
     for (const event of config.events) {
       switch (event[1]) {
         case 'in': {
           const [time, , ...input] = event;
-          const isSourceDispatchInput = input[0] === 'source.next' && previousDispatchTime === time;
-          if (isSourceDispatchInput) {
-            this.sourceDispatchInputs.push([time, ...input]);
+          const isDispatchEmission = input[0] === 'source.next' 
+            && sourceDispatchInput?.time === time;
+          if (isDispatchEmission) {
+            sourceDispatchInput!.emission = { sourceState: input[1] };
           } else {
             this.mainInputs.push([time, ...input]);
           }
-          previousDispatchTime = null;
+          sourceDispatchInput = null;
           break;
         }
         case 'out': {
           const [time, , ...output] = event;
           this.expectedOutputs.push([time, ...output]);
           if (output[0] === 'source.dispatch') {
-            previousDispatchTime = time;
-          } else if (previousDispatchTime !== time) {
-            previousDispatchTime = null;
+            sourceDispatchInput = {
+              time,
+              event: output[1],
+              consumed: false,
+            };
+            this.sourceDispatchInputs.push(sourceDispatchInput);
+          } else if (sourceDispatchInput?.time !== time) {
+            sourceDispatchInput = null;
           }
           break;
         }
@@ -108,10 +120,16 @@ class Tester<State, Event, SourceState, SourceEvent> {
           return {
             dispatch: (event: SourceEvent | SourceEvent[]) => {
               this.record(['source.dispatch', event]);
-              const inputIndex = this.sourceDispatchInputs.findIndex(([time]) => time === this.time);
-              if (inputIndex !== -1) {
-                const [, , sourceState] = this.sourceDispatchInputs.splice(inputIndex, 1)[0];
-                this.sourceNext?.(sourceState);
+              const input = this.sourceDispatchInputs
+                .find((input) => !input.consumed
+                  && input.time === this.time 
+                  && isDeepStrictEqual(input.event, event)
+                );
+              if (input) {
+                input.consumed = true;
+                if (input.emission) {
+                  this.sourceNext?.(input.emission.sourceState);
+                }
               }
             },
             dispose: () => {

@@ -496,6 +496,34 @@ describe('React', () => {
         ],
       });
     });
+    // TODO: refactor this test by moving it to test util tests, since this is mainly testing `test util` not `react` operator.
+    it('should associate reactive response with correct dispatch occurrence when multiple dispatches occur at the same timestamp', async () => {
+      await runSystemTest<State, Event, State, Event>({
+        systemFactory: (mockSource) => pipe(
+          mockSource,
+          react({
+            request: () => null,
+            effect: () => { },
+          }),
+        ),
+        events: [
+          [10, 'in',  'observe'],
+          [10, 'out', 'source.observe'],
+          [10, 'in',  'source.next', 0],
+          [10, 'out', 'next', 0],
+
+          [20, 'in',  'dispatch', 'inc'],
+          [20, 'out', 'source.dispatch', 'inc'],
+          [20, 'in',  'dispatch', 'inc'],
+          [20, 'out', 'source.dispatch', 'inc'],
+          [20, 'in',  'source.next', 2],
+          [20, 'out', 'next', 2],
+
+          [30, 'in',  'dispose'],
+          [30, 'out', 'source.dispose'],
+        ],
+      })
+    });
     it('should not forward empty array dispatch to source', async () => {
       await runSystemTest<State, Event, State, Event>({
         systemFactory: (mockSource) => pipe(
