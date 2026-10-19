@@ -1,3 +1,4 @@
+import { isDeepStrictEqual } from 'node:util';
 import { expect, vi } from 'vitest';
 import { Observer, Store, System } from '../src/core.js';
 
@@ -21,6 +22,13 @@ type Output<State, SourceEvent> =
 type TimedInput<Event, SourceState> = [number, ...Input<Event, SourceState>];
 type TimedOutput<State, SourceEvent> = [number, ...Output<State, SourceEvent>];
 
+interface SourceDispatchInput<SourceState, SourceEvent> {
+  time: number;
+  event: SourceEvent | readonly SourceEvent[];
+  emission?: { sourceState: SourceState };
+  consumed: boolean;
+}
+
 type TestEvent<State, Event, SourceState, SourceEvent> =
   [number, 'in', ...Input<Event, SourceState>] | [number, 'out', ...Output<State, SourceEvent>];
 
@@ -39,7 +47,7 @@ async function runSystemTest<State, Event, SourceState, SourceEvent>(
   const tester = new Tester(config);
   try {
     tester.schedule();
-    const maxInputTime = Math.max(0, ...tester.inputs.map(([time]) => time));
+    const maxInputTime = Math.max(0, ...config.events.map(([time]) => time));
     await vi.advanceTimersByTimeAsync(maxInputTime + 990); // for delay operator like `StateDelay`.`
     expect(tester.outputs).toEqual(tester.expectedOutputs);
   } finally {
@@ -48,10 +56,10 @@ async function runSystemTest<State, Event, SourceState, SourceEvent>(
 }
 
 class Tester<State, Event, SourceState, SourceEvent> {
-  public readonly inputs: TimedInput<Event, SourceState>[];
-  public readonly expectedOutputs: TimedOutput<State, SourceEvent>[];
+  public readonly mainInputs: TimedInput<Event, SourceState>[] = [];
+  public readonly sourceDispatchInputs: SourceDispatchInput<SourceState, SourceEvent>[] = [];
+  public readonly expectedOutputs: TimedOutput<State, SourceEvent>[] = [];
   public readonly outputs: TimedOutput<State, SourceEvent>[] = [];
-  private readonly consumedInputIndices = new Set<number>();
   private readonly startTime = Date.now();
   private store?: Store<State, Event>;
   private store2?: Store<State, Event>;
@@ -66,15 +74,38 @@ class Tester<State, Event, SourceState, SourceEvent> {
   };
 
   constructor(private readonly config: SystemTestConfig<State, Event, SourceState, SourceEvent>) {
-    this.inputs = config.events
-      .filter((event): event is [number, 'in', ...Input<Event, SourceState>] => event[1] === 'in')
-      .map(([time, _, ...input]) => [time, ...input]);
-    
-    this.expectedOutputs = config.events
-      .filter(
-        (event): event is [number, 'out', ...Output<State, SourceEvent>] => event[1] === 'out',
-      )
-      .map(([time, _, ...output]) => [time, ...output]);
+    let sourceDispatchInput: SourceDispatchInput<SourceState, SourceEvent> | null = null;
+    for (const event of config.events) {
+      switch (event[1]) {
+        case 'in': {
+          const [time, , ...input] = event;
+          const isDispatchEmission = input[0] === 'source.next' 
+            && sourceDispatchInput?.time === time;
+          if (isDispatchEmission) {
+            sourceDispatchInput!.emission = { sourceState: input[1] };
+          } else {
+            this.mainInputs.push([time, ...input]);
+          }
+          sourceDispatchInput = null;
+          break;
+        }
+        case 'out': {
+          const [time, , ...output] = event;
+          this.expectedOutputs.push([time, ...output]);
+          if (output[0] === 'source.dispatch') {
+            sourceDispatchInput = {
+              time,
+              event: output[1],
+              consumed: false,
+            };
+            this.sourceDispatchInputs.push(sourceDispatchInput);
+          } else if (sourceDispatchInput?.time !== time) {
+            sourceDispatchInput = null;
+          }
+          break;
+        }
+      }
+    }
   }
 
   private _system?: System<State, Event>;
@@ -89,16 +120,15 @@ class Tester<State, Event, SourceState, SourceEvent> {
           return {
             dispatch: (event: SourceEvent | SourceEvent[]) => {
               this.record(['source.dispatch', event]);
-
-              const nextIndex = this.inputs.findIndex(
-                (_, index) => !this.consumedInputIndices.has(index),
-              );
-
-              if (nextIndex !== -1) {
-                const nextEvent = this.inputs[nextIndex];
-                if (nextEvent[0] === this.time && nextEvent[1] === 'source.next') {
-                  this.consumedInputIndices.add(nextIndex);
-                  this.sourceNext?.(nextEvent[2]);
+              const input = this.sourceDispatchInputs
+                .find((input) => !input.consumed
+                  && input.time === this.time 
+                  && isDeepStrictEqual(input.event, event)
+                );
+              if (input) {
+                input.consumed = true;
+                if (input.emission) {
+                  this.sourceNext?.(input.emission.sourceState);
                 }
               }
             },
@@ -123,12 +153,8 @@ class Tester<State, Event, SourceState, SourceEvent> {
   }
 
   schedule() {
-    this.inputs.forEach(([time, ...input], index) => {
+    this.mainInputs.forEach(([time, ...input]) => {
       setTimeout(() => {
-        if (this.consumedInputIndices.has(index)) {
-          return;
-        }
-        this.consumedInputIndices.add(index);
         switch (input[0]) {
           case 'observe':
             this.store = this.system.observe(this.observer);
@@ -157,4 +183,12 @@ class Tester<State, Event, SourceState, SourceEvent> {
   }
 }
 
-export { Input, Output, TimedInput, TimedOutput, SystemTestConfig, runSystemTest };
+export { 
+  Input, 
+  Output, 
+  TimedInput, 
+  TimedOutput, 
+  SourceDispatchInput, 
+  SystemTestConfig, 
+  runSystemTest 
+};
