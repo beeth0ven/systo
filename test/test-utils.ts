@@ -4,19 +4,23 @@ import { Observer, Store, System } from '../src/core.js';
 
 type Input<Event, SourceState> =
   | ['observe']
-  | ['dispatch', Event | readonly Event[]]
-  | ['dispose']
   | ['observe2']
+  | ['dispatch', Event | readonly Event[]]
   | ['dispatch2', Event | readonly Event[]]
+  | ['dispose']
   | ['dispose2']
-  | ['source.next', SourceState];
+  | ['source.next', SourceState]
+  | ['source.next2', SourceState];
 
 type Output<State, SourceEvent> =
   | ['next', State]
   | ['next2', State]
   | ['source.observe']
+  | ['source.observe2']
   | ['source.dispatch', SourceEvent | readonly SourceEvent[]]
+  | ['source.dispatch2', SourceEvent | readonly SourceEvent[]]
   | ['source.dispose']
+  | ['source.dispose2']
   | ['log', string];
 
 type TimedInput<Event, SourceState> = [number, ...Input<Event, SourceState>];
@@ -24,6 +28,7 @@ type TimedOutput<State, SourceEvent> = [number, ...Output<State, SourceEvent>];
 
 interface SourceDispatchInput<SourceState, SourceEvent> {
   time: number;
+  target: 1 | 2;
   event: SourceEvent | readonly SourceEvent[];
   emission?: { sourceState: SourceState };
   consumed: boolean;
@@ -64,6 +69,7 @@ class Tester<State, Event, SourceState, SourceEvent> {
   private store?: Store<State, Event>;
   private store2?: Store<State, Event>;
   private sourceNext?: (value: SourceState) => void;
+  private sourceNext2?: (value: SourceState) => void;
 
   private readonly observer: Observer<State> = {
     next: (state) => this.record(['next', state]),
@@ -79,8 +85,9 @@ class Tester<State, Event, SourceState, SourceEvent> {
       switch (event[1]) {
         case 'in': {
           const [time, , ...input] = event;
-          const isDispatchEmission = input[0] === 'source.next' 
-            && sourceDispatchInput?.time === time;
+          const isDispatchEmission = sourceDispatchInput !== null
+            && sourceDispatchInput.time === time
+            && (sourceDispatchInput.target === 2 ? 'source.next2' : 'source.next') === input[0];
           if (isDispatchEmission) {
             sourceDispatchInput!.emission = { sourceState: input[1] };
           } else {
@@ -92,9 +99,10 @@ class Tester<State, Event, SourceState, SourceEvent> {
         case 'out': {
           const [time, , ...output] = event;
           this.expectedOutputs.push([time, ...output]);
-          if (output[0] === 'source.dispatch') {
+          if (output[0] === 'source.dispatch' || output[0] === 'source.dispatch2') {
             sourceDispatchInput = {
               time,
+              target: output[0] === 'source.dispatch' ? 1 : 2,
               event: output[1],
               consumed: false,
             };
@@ -113,27 +121,37 @@ class Tester<State, Event, SourceState, SourceEvent> {
     if (!this._system) {
       const mockSource: System<SourceState, SourceEvent> = {
         observe: (observer: Observer<SourceState>) => {
-          this.record(['source.observe']);
-          this.sourceNext = (value) => {
+          const isFirst = !this.sourceNext;
+          const sourceNext = (value: SourceState) => {
             observer.next(value);
           };
+          if (isFirst) {
+            this.sourceNext = sourceNext;
+            this.record(['source.observe']);
+          } else if (!this.sourceNext2) {
+            this.sourceNext2 = sourceNext;
+            this.record(['source.observe2']);
+          } else {
+            throw new Error(`Tester only supports up to 2 source connections.`);
+          }
           return {
-            dispatch: (event: SourceEvent | SourceEvent[]) => {
-              this.record(['source.dispatch', event]);
+            dispatch: (event: SourceEvent | readonly SourceEvent[]) => {
+              this.record([isFirst ? 'source.dispatch' : 'source.dispatch2', event]);
               const input = this.sourceDispatchInputs
                 .find((input) => !input.consumed
                   && input.time === this.time 
+                  && input.target === (isFirst ? 1 : 2)
                   && isDeepStrictEqual(input.event, event)
                 );
               if (input) {
                 input.consumed = true;
                 if (input.emission) {
-                  this.sourceNext?.(input.emission.sourceState);
+                  sourceNext(input.emission.sourceState);
                 }
               }
             },
             dispose: () => {
-              this.record(['source.dispose']);
+              this.record([isFirst ? 'source.dispose' : 'source.dispose2']);
             },
           };
         },
@@ -176,6 +194,9 @@ class Tester<State, Event, SourceState, SourceEvent> {
             break;
           case 'source.next':
             this.sourceNext?.(input[1]);
+            break;
+          case 'source.next2':
+            this.sourceNext2?.(input[1]);
             break;
         }
       }, time);
