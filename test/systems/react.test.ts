@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, it } from "vitest";
 import { runSystemTest } from "../test-utils.js";
-import { Observer, pipe, react, Store, System } from "../../src/index.js";
+import { pipe, react, Store } from "../../src/index.js";
 
 describe('React', () => {
   describe('Effect Lifecycle & Execution', () => {
@@ -547,60 +547,57 @@ describe('React', () => {
       });
     });
   });
-  // TODO: see https://github.com/users/beeth0ven/projects/2/views/2?pane=issue&itemId=252595207
   describe('Multiple Observers', () => {
-    it('should maintain independent stores and effects for each observer', () => {
-      type State = { query: string };
-      type Event = string;
-      type Dispose = ReturnType<typeof vi.fn>;
-      
-      const logs: string[] = [];
-      const sourceObservers: Observer<State>[] = [];
-      const sourceDisposers: Dispose[] = [];
+    type State = { query: string };
+    type Event = string;
+    it('should maintain independent stores and effects for each observer', async () => {
+      await runSystemTest<State, Event, State, Event>({
+        systemFactory: (mockSource, log) => pipe(
+          mockSource,
+          react({
+            request: (state) => state.query,
+            effect: (query) => {
+              log(`effect:start:${query}`);
+              return () => log(`effect:cancel:${query}`);
+            }
+          })
+        ),
+        events: [
+          [10, 'in',  'observe'],
+          [10, 'out', 'source.observe'],
+          [10, 'in',  'observe2'],
+          [10, 'out', 'source.observe2'],
+          
+          [10, 'in',  'source.next', { query: 'r1' }],
+          [10, 'out', 'log', 'effect:start:r1'],
+          [10, 'out', 'next', { query: 'r1' }],
+          [10, 'in',  'source.next2', { query: 'r2' }],
+          [10, 'out', 'log', 'effect:start:r2'],
+          [10, 'out', 'next2', { query: 'r2' }],
 
-      const mockSource: System<State, Event> = {
-        observe: (observer) => {
-          sourceObservers.push(observer);
-          const dispose = vi.fn();
-          sourceDisposers.push(dispose);
-          return {
-            dispatch: vi.fn(),
-            dispose,
-          };
-        },
-      };
+          [20, 'in',  'dispatch', 'update'],
+          [20, 'out', 'source.dispatch', 'update'],
+          [20, 'in',  'source.next', { query: 'r1_next' }],
+          [20, 'out', 'log', 'effect:cancel:r1'],
+          [20, 'out', 'log', 'effect:start:r1_next'],
+          [20, 'out', 'next', { query: 'r1_next' }],
 
-      const system: System<State, Event> = pipe(
-        mockSource,
-        react({
-          request: (state) => state.query,
-          effect: (query) => {
-            logs.push(`effect:start:${query}`);
-            return () => logs.push(`effect:cancel:${query}`);
-          },
-        }),
-      );
+          [20, 'in',  'dispatch2', 'update'],
+          [20, 'out', 'source.dispatch2', 'update'],
+          [20, 'in',  'source.next2', { query: 'r2_next' }],
+          [20, 'out', 'log', 'effect:cancel:r2'],
+          [20, 'out', 'log', 'effect:start:r2_next'],
+          [20, 'out', 'next2', { query: 'r2_next' }],
 
-      const store1 = system.observe({ next: vi.fn() });
-      const store2 = system.observe({ next: vi.fn() });
+          [30, 'in',  'dispose'],
+          [30, 'out', 'log', 'effect:cancel:r1_next'],
+          [30, 'out', 'source.dispose'],
 
-      expect(sourceObservers).toHaveLength(2);
-
-      sourceObservers[0].next({ query: 'r1' });
-      expect(logs).toEqual(['effect:start:r1']);
-
-      sourceObservers[1].next({ query: 'r2' });
-      expect(logs).toEqual(['effect:start:r1', 'effect:start:r2']);
-      logs.length = 0;
-
-      store1.dispose();
-      expect(logs).toEqual(['effect:cancel:r1']);
-      expect(sourceDisposers[0]).toHaveBeenCalledTimes(1);
-      expect(sourceDisposers[1]).toHaveBeenCalledTimes(0);
-
-      store2.dispose();
-      expect(logs).toEqual(['effect:cancel:r1', 'effect:cancel:r2']);
-      expect(sourceDisposers[1]).toHaveBeenCalledTimes(1);
+          [40, 'in',  'dispose2'],
+          [40, 'out', 'log', 'effect:cancel:r2_next'],
+          [40, 'out', 'source.dispose2'],
+        ],
+      });
     });
   });
 })

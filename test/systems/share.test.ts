@@ -86,12 +86,12 @@ describe('Share', () => {
         [20, 'out', 'source.dispose'],
 
         [30, 'in',  'observe2'],
-        [30, 'out', 'source.observe'],
-        [30, 'in',  'source.next', 'a'],
+        [30, 'out', 'source.observe2'],
+        [30, 'in',  'source.next2', 'a'],
         [30, 'out', 'next2', 'a'],
 
         [40, 'in',  'dispose2'],
-        [40, 'out', 'source.dispose'],
+        [40, 'out', 'source.dispose2'],
       ],
     });
   });
