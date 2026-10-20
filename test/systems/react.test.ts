@@ -565,22 +565,36 @@ describe('React', () => {
         events: [
           [10, 'in',  'observe'],
           [10, 'out', 'source.observe'],
+          [10, 'in',  'observe2'],
+          [10, 'out', 'source.observe2'],
+          
           [10, 'in',  'source.next', { query: 'r1' }],
           [10, 'out', 'log', 'effect:start:r1'],
           [10, 'out', 'next', { query: 'r1' }],
+          [10, 'in',  'source.next2', { query: 'r2' }],
+          [10, 'out', 'log', 'effect:start:r2'],
+          [10, 'out', 'next2', { query: 'r2' }],
 
-          [20, 'in',  'observe2'],
-          [20, 'out', 'source.observe2'],
-          [20, 'in',  'source.next2', { query: 'r2' }],
-          [20, 'out', 'log', 'effect:start:r2'],
-          [20, 'out', 'next2', { query: 'r2' }],
+          [20, 'in',  'dispatch', 'update'],
+          [20, 'out', 'source.dispatch', 'update'],
+          [20, 'in',  'source.next', { query: 'r1_next' }],
+          [20, 'out', 'log', 'effect:cancel:r1'],
+          [20, 'out', 'log', 'effect:start:r1_next'],
+          [20, 'out', 'next', { query: 'r1_next' }],
+
+          [20, 'in',  'dispatch2', 'update'],
+          [20, 'out', 'source.dispatch2', 'update'],
+          [20, 'in',  'source.next2', { query: 'r2_next' }],
+          [20, 'out', 'log', 'effect:cancel:r2'],
+          [20, 'out', 'log', 'effect:start:r2_next'],
+          [20, 'out', 'next2', { query: 'r2_next' }],
 
           [30, 'in',  'dispose'],
-          [30, 'out', 'log', 'effect:cancel:r1'],
+          [30, 'out', 'log', 'effect:cancel:r1_next'],
           [30, 'out', 'source.dispose'],
 
           [40, 'in',  'dispose2'],
-          [40, 'out', 'log', 'effect:cancel:r2'],
+          [40, 'out', 'log', 'effect:cancel:r2_next'],
           [40, 'out', 'source.dispose2'],
         ],
       });
