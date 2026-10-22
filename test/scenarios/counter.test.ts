@@ -21,23 +21,31 @@ describe('Requirement: Counter', () => {
           }
         },
       }),
-      events: [
-        [10, 'in',  'observe'],
-        [10, 'out', 'next', 0],
-
-        [20, 'in',  'dispatch', 'increment'],
-        [20, 'out', 'next', 1],
-
-        [30, 'in',  'dispatch', 'increment'],
-        [30, 'out', 'next', 2],
-
-        [40, 'in',  'dispatch', 'decrement'],
-        [40, 'out', 'next', 1],
-
-        [50, 'in',  'dispose'],
-        
-        [60, 'in',  'dispatch', 'increment'],
-      ],
-    })
-  })
+      events: {
+        10: [
+          ['observe'],
+          ['next', 0],
+        ],
+        20: [
+          ['dispatch', 'increment'],
+          ['next', 1],
+        ],
+        30: [
+          ['dispatch', 'increment'],
+          ['next', 2],
+        ],
+        40: [
+          ['dispatch', 'decrement'],
+          ['next', 1],
+        ],
+        50: [
+          ['dispose'],
+        ],
+        60: [
+          ['dispatch', 'increment'],
+          // ['next', 2], --- IGNORE after disposal ---
+        ]
+      },
+    });
+  });
 });

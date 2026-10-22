@@ -48,44 +48,40 @@ describe('View', () => {
             },
           })
         ),
-        events: [
-          // 1. Observe: connects to the source and awaits the initial source state
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-
-          // 2. Source emits initial state -> View combines with initial local state
-          [10, 'in',  'source.next', { count: 0 }],
-          [10, 'out', 'next', { count: 0, isEditing: false }],
-
-          // 3. Single local event
-          [20, 'in',  'dispatch', 'toggleEdit'],
-          [20, 'out', 'next', { count: 0, isEditing: true }],
-
-          // 4. Single source event: forwarded as array to source
-          [30, 'in',  'dispatch', 'increment'],
-          [30, 'out', 'source.dispatch', ['increment']],
-          
-          // 5. Source updates
-          [30, 'in',  'source.next', { count: 1 }],
-          [30, 'out', 'next', { count: 1, isEditing: true }],
-          
-          // 6. Batch Dispatch: mixed local and source events in one all
-          // -> Both executed, source events send together
-          [40, 'in',  'dispatch', ['increment', 'increment', 'toggleEdit']],
-          [40, 'out', 'source.dispatch', ['increment', 'increment']],
-          
-          // 7. Source responds to the batch increment
-          [40, 'in',  'source.next', { count: 3 }],
-          [40, 'out', 'next', { count: 3, isEditing: false }],
-
-          // 8. Disposal
-          [50, 'in',  'dispose'],
-          [50, 'out', 'source.dispose'],
-
-          // 9. Ignore after disposal
-          [60, 'in',  'dispatch', 'toggleEdit'],
-          [70, 'in',  'source.next', { count: 4 }],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { count: 0 }],
+            ['next', { count: 0, isEditing: false }],
+          ],
+          20: [
+            ['dispatch', 'toggleEdit'],
+            ['next', { count: 0, isEditing: true }],
+          ],
+          30: [
+            ['dispatch', 'increment'],
+            ['source.dispatch', ['increment']],
+            ['source.next', { count: 1 }],
+            ['next', { count: 1, isEditing: true }],
+          ],
+          40: [
+            ['dispatch', ['increment', 'increment', 'toggleEdit']],
+            ['source.dispatch', ['increment', 'increment']],
+            ['source.next', { count: 3 }],
+            ['next', { count: 3, isEditing: false }],
+          ],
+          50: [
+            ['dispose'],
+            ['source.dispose'],
+          ],
+          60: [
+            ['dispatch', 'toggleEdit'],
+          ],
+          70: [
+            ['source.next', { count: 4 }],
+          ],
+        },
       });
     });
   });
@@ -137,34 +133,32 @@ describe('View', () => {
             },
           })
         ),
-        events: [
-          // 1. Observe: connects to the source and awaits the initial source state
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-
-          // 2. Source emits initial state -> View combines with initial local state
-          [10, 'in',  'source.next', { savedMessages: [] }],
-          [10, 'out', 'next', { savedMessages: [], buffer: '' }],
-          
-          // 3. Sequential local events (tokens)
-          [20, 'in',  'dispatch', { type: 'token', chunk: 'Hello' }],
-          [20, 'out', 'next', { savedMessages: [], buffer: 'Hello' }],
-
-          [30, 'in',  'dispatch', { type: 'token', chunk: ' World' }],
-          [30, 'out', 'next', { savedMessages: [], buffer: 'Hello World' }],
-
-          // 4. Batch dispatches
-          [40, 'in',  'dispatch', [
-            { type: 'token', chunk: '!' },
-            { type: 'token', chunk: ' 🚀' },
-            { type: 'submit' },
-          ]],
-          [40, 'out', 'source.dispatch', [{ type: 'commit', message: 'Hello World! 🚀' }]],
-
-          // 5. Source responds to the commit
-          [40, 'in',  'source.next', { savedMessages: ['Hello World! 🚀'] }],
-          [40, 'out', 'next', { savedMessages: ['Hello World! 🚀'], buffer: '' }],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { savedMessages: [] }],
+            ['next', { savedMessages: [], buffer: '' }],
+          ],
+          20: [
+            ['dispatch', { type: 'token', chunk: 'Hello' }],
+            ['next', { savedMessages: [], buffer: 'Hello' }],
+          ],
+          30: [
+            ['dispatch', { type: 'token', chunk: ' World' }],
+            ['next', { savedMessages: [], buffer: 'Hello World' }],
+          ],
+          40: [
+            ['dispatch', [
+              { type: 'token', chunk: '!' },
+              { type: 'token', chunk: ' 🚀' },
+              { type: 'submit' },
+            ]],
+            ['source.dispatch', [{ type: 'commit', message: 'Hello World! 🚀' }]],
+            ['source.next', { savedMessages: ['Hello World! 🚀'] }],
+            ['next', { savedMessages: ['Hello World! 🚀'], buffer: '' }],
+          ]
+        },
       });
     });
   });

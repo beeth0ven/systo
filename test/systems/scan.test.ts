@@ -9,16 +9,27 @@ describe('Scan', () => {
         initialState: 'a', 
         reduce: (state, event) => `${state}|${event}`,
       }),
-      events: [
-        [10, 'in',  'observe'],
-        [10, 'out', 'next', 'a'],
-        [20, 'in',  'dispatch', 'b'],
-        [20, 'out', 'next', 'a|b'],
-        [30, 'in',  'dispatch', 'c'],
-        [30, 'out', 'next', 'a|b|c'],
-        [40, 'in',  'dispose'],
-        [50, 'in',  'dispatch', 'd'],
-      ]
+      events: {
+        10: [
+          ['observe'],
+          ['next', 'a'],
+        ],
+        20: [
+          ['dispatch', 'b'],
+          ['next', 'a|b'],
+        ],
+        30: [
+          ['dispatch', 'c'],
+          ['next', 'a|b|c'],
+        ],
+        40: [
+          ['dispose'],
+        ],
+        50: [
+          ['dispatch', 'd'],
+          // ['next', 'a|b|c|d'], --- IGNORE after disposal ---
+        ]
+      },
     });
   })
 });
