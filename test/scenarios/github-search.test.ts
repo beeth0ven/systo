@@ -49,25 +49,33 @@ describe('Requirement: Github Search', () => {
           },
         })
       ),
-      events: [
-        [10, 'in',  'observe'],
-        [10, 'out', 'next', { query: '', status: 'idle', results: [] }],
-
-        [20, 'in',  'dispatch', { type: 'input', query: 'react' }],
-        [20, 'out', 'next', { query: 'react', status: 'loading', results: [] }],
-
-        [40, 'out', 'next', { query: 'react', status: 'success', results: ['react-repo'] }],
-
-        [50, 'in',  'dispatch', { type: 'input', query: 'vue' }],
-        [50, 'out', 'next', { query: 'vue', status: 'loading', results: [] }],
-
-        [60, 'in',  'dispatch', { type: 'input', query: 'systo' }],
-        [60, 'out', 'next', { query: 'systo', status: 'loading', results: [] }],
-
-        [80, 'out', 'next', { query: 'systo', status: 'success', results: ['systo-repo'] }],
-
-        [90, 'in',  'dispose'],
-      ],
-    })
+      events: {
+        10: [
+          ['observe'],
+          ['next', { query: '', status: 'idle', results: [] }],
+        ],
+        20: [
+          ['dispatch', { type: 'input', query: 'react' }],
+          ['next', { query: 'react', status: 'loading', results: [] }],
+        ],
+        40: [
+          ['next', { query: 'react', status: 'success', results: ['react-repo'] }],
+        ],
+        50: [
+          ['dispatch', { type: 'input', query: 'vue' }],
+          ['next', { query: 'vue', status: 'loading', results: [] }],
+        ],
+        60: [
+          ['dispatch', { type: 'input', query: 'systo' }],
+          ['next', { query: 'systo', status: 'loading', results: [] }],
+        ],
+        80: [
+          ['next', { query: 'systo', status: 'success', results: ['systo-repo'] }],
+        ],
+        90: [
+          ['dispose'],
+        ]
+      },
+    });
   });
 });

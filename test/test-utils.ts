@@ -23,6 +23,10 @@ type Output<State, SourceEvent> =
   | ['source.dispose2']
   | ['log', string];
 
+type TestEvent<State, Event, SourceState, SourceEvent> = 
+  | Input<Event, SourceState>
+  | Output<State, SourceEvent>;
+
 type TimedInput<Event, SourceState> = [number, ...Input<Event, SourceState>];
 type TimedOutput<State, SourceEvent> = [number, ...Output<State, SourceEvent>];
 
@@ -34,15 +38,31 @@ interface SourceDispatchInput<SourceState, SourceEvent> {
   consumed: boolean;
 }
 
-type TestEvent<State, Event, SourceState, SourceEvent> =
-  [number, 'in', ...Input<Event, SourceState>] | [number, 'out', ...Output<State, SourceEvent>];
+type TimedTestEvents<State, Event, SourceState, SourceEvent> = Record<number, TestEvent<State, Event, SourceState, SourceEvent>[]>;
+
+const INPUT_TYPES: Set<string> = new Set<Input<unknown, unknown>[0]>([
+  'observe',
+  'observe2',
+  'dispatch',
+  'dispatch2',
+  'dispose',
+  'dispose2',
+  'source.next',
+  'source.next2',
+]);
+
+function isInput<State, Event, SourceState, SourceEvent>(
+  testEvent: TestEvent<State, Event, SourceState, SourceEvent>,
+): testEvent is Input<Event, SourceState> {
+  return INPUT_TYPES.has(testEvent[0]);
+}
 
 interface SystemTestConfig<State, Event, SourceState, SourceEvent> {
   systemFactory: (
     mockSource: System<SourceState, SourceEvent>,
     log: (message: string) => void,
   ) => System<State, Event>;
-  events: TestEvent<State, Event, SourceState, SourceEvent>[];
+  events: TimedTestEvents<State, Event, SourceState, SourceEvent>;
 }
 
 async function runSystemTest<State, Event, SourceState, SourceEvent>(
@@ -52,8 +72,8 @@ async function runSystemTest<State, Event, SourceState, SourceEvent>(
   const tester = new Tester(config);
   try {
     tester.schedule();
-    const maxInputTime = Math.max(0, ...config.events.map(([time]) => time));
-    await vi.advanceTimersByTimeAsync(maxInputTime + 990); // for delay operator like `StateDelay`.`
+    const maxTime = Math.max(0, ...Object.keys(config.events).map(Number));
+    await vi.advanceTimersByTimeAsync(maxTime + 990); // for delay operator like `StateDelay`.`
     expect(tester.outputs).toEqual(tester.expectedOutputs);
   } finally {
     vi.useRealTimers();
@@ -80,37 +100,30 @@ class Tester<State, Event, SourceState, SourceEvent> {
   };
 
   constructor(private readonly config: SystemTestConfig<State, Event, SourceState, SourceEvent>) {
-    let sourceDispatchInput: SourceDispatchInput<SourceState, SourceEvent> | null = null;
-    for (const event of config.events) {
-      switch (event[1]) {
-        case 'in': {
-          const [time, , ...input] = event;
+    for (const [timeKey, events] of Object.entries(config.events)) {
+      const time = Number(timeKey);
+      let sourceDispatchInput: SourceDispatchInput<SourceState, SourceEvent> | null = null;
+      for (const event of events) {
+        if (isInput(event)) {
           const isDispatchEmission = sourceDispatchInput !== null
-            && sourceDispatchInput.time === time
-            && (sourceDispatchInput.target === 2 ? 'source.next2' : 'source.next') === input[0];
+            && (sourceDispatchInput.target === 2 ? 'source.next2' : 'source.next') === event[0];
           if (isDispatchEmission) {
-            sourceDispatchInput!.emission = { sourceState: input[1] };
+            sourceDispatchInput!.emission = { sourceState: event[1] };
           } else {
-            this.mainInputs.push([time, ...input]);
+            this.mainInputs.push([time, ...event]);
           }
           sourceDispatchInput = null;
-          break;
-        }
-        case 'out': {
-          const [time, , ...output] = event;
-          this.expectedOutputs.push([time, ...output]);
-          if (output[0] === 'source.dispatch' || output[0] === 'source.dispatch2') {
+        } else {
+          this.expectedOutputs.push([time, ...event]);
+          if (event[0] === 'source.dispatch' || event[0] === 'source.dispatch2') {
             sourceDispatchInput = {
               time,
-              target: output[0] === 'source.dispatch' ? 1 : 2,
-              event: output[1],
+              target: event[0] === 'source.dispatch' ? 1 : 2,
+              event: event[1],
               consumed: false,
             };
             this.sourceDispatchInputs.push(sourceDispatchInput);
-          } else if (sourceDispatchInput?.time !== time) {
-            sourceDispatchInput = null;
           }
-          break;
         }
       }
     }

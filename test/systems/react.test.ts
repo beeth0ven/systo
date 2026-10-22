@@ -24,39 +24,48 @@ describe('React', () => {
             }
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { query: 'a' }],
-          [10, 'out', 'log', 'effect:start:a'],
-          [10, 'out', 'next', { query: 'a' }],
-
-          [20, 'in',  'source.next', { query: 'a', count: 1 }],
-          [20, 'out',  'next', { query: 'a', count: 1 }],
-
-          [30, 'in',  'source.next', { query: 'b' }],
-          [30, 'out', 'log', 'effect:teardown:a'],
-          [30, 'out', 'log', 'effect:start:b'],
-          [30, 'out', 'next', { query: 'b' }],
-
-          [40, 'in',  'source.next', { query: null }],
-          [40, 'out', 'log', 'effect:teardown:b'],
-          [40, 'out', 'next', { query: null }],
-
-          [50, 'in',  'source.next', { query: undefined as any }],
-          [50, 'out', 'next', { query: undefined as any }],
-
-          [60, 'in',  'source.next', { query: 'c' }],
-          [60, 'out', 'log', 'effect:start:c'],
-          [60, 'out', 'next', { query: 'c' }],
-
-          [70, 'in',  'dispose'],
-          [70, 'out', 'log', 'effect:teardown:c'],
-          [70, 'out', 'source.dispose'],
-
-          [80, 'in', 'source.next', { query: 'd' }],
-        ],
-      })
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { query: 'a' }],
+            ['log', 'effect:start:a'],
+            ['next', { query: 'a' }],
+          ],
+          20: [
+            ['source.next', { query: 'a', count: 1 }],
+            ['next', { query: 'a', count: 1 }],
+          ],
+          30: [
+            ['source.next', { query: 'b' }],
+            ['log', 'effect:teardown:a'],
+            ['log', 'effect:start:b'],
+            ['next', { query: 'b' }],
+          ],
+          40: [
+            ['source.next', { query: null }],
+            ['log', 'effect:teardown:b'],
+            ['next', { query: null }],
+          ],
+          50: [
+            ['source.next', { query: undefined as any }],
+            ['next', { query: undefined as any }],
+          ],
+          60: [
+            ['source.next', { query: 'c' }],
+            ['log', 'effect:start:c'],
+            ['next', { query: 'c' }],
+          ],
+          70: [
+            ['dispose'],
+            ['log', 'effect:teardown:c'],
+            ['source.dispose'],
+          ],
+          80: [
+            ['source.next', { query: 'd' }],
+          ],
+        },
+      });
     });
     it('should not run effect when initial state produces null or undefined request', async () => {
       await runSystemTest<State, Event, State, Event>({
@@ -70,24 +79,29 @@ describe('React', () => {
             }
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { query: null }],
-          [10, 'out', 'next', { query: null }],
-
-          [20, 'in',  'source.next', { query: undefined as any }],
-          [20, 'out', 'next', { query: undefined as any }],
-
-          [30, 'in',  'source.next', { query: 'a' }],
-          [30, 'out', 'log', 'effect:start:a'],
-          [30, 'out', 'next', { query: 'a' }],
-
-          [40, 'in',  'dispose'],
-          [40, 'out', 'log', 'effect:teardown:a'],
-          [40, 'out', 'source.dispose'],
-        ],
-      })
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { query: null }],
+            ['next', { query: null }],
+          ],
+          20: [
+            ['source.next', { query: undefined as any }],
+            ['next', { query: undefined as any }],
+          ],
+          30: [
+            ['source.next', { query: 'a' }],
+            ['log', 'effect:start:a'],
+            ['next', { query: 'a' }],
+          ],
+          40: [
+            ['dispose'],
+            ['log', 'effect:teardown:a'],
+            ['source.dispose'],
+          ],
+        },
+      });
     });
   });
   describe('Teardown & Cleanup Variants', () => {
@@ -108,23 +122,27 @@ describe('React', () => {
             }
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { task: 'task1' }],
-          [10, 'out', 'log', 'effect:start:task1'],
-          [10, 'out', 'next', { task: 'task1' }],
-
-          [20, 'in',  'source.next', { task: 'task2' }],
-          [20, 'out', 'log', 'effect:teardown:task1'],
-          [20, 'out', 'log', 'effect:start:task2'],
-          [20, 'out', 'next', { task: 'task2' }],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'log', 'effect:teardown:task2'],
-          [30, 'out', 'source.dispose'],
-        ],
-      })
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { task: 'task1' }],
+            ['log', 'effect:start:task1'],
+            ['next', { task: 'task1' }],
+          ],
+          20: [
+            ['source.next', { task: 'task2' }],
+            ['log', 'effect:teardown:task1'],
+            ['log', 'effect:start:task2'],
+            ['next', { task: 'task2' }],
+          ],
+          30: [
+            ['dispose'],
+            ['log', 'effect:teardown:task2'],
+            ['source.dispose'],
+          ],
+        },
+      });
     });
     it('should support void / no teardown returned from effect', async () => {
       await runSystemTest<State, Event, State, Event>({
@@ -137,21 +155,25 @@ describe('React', () => {
             }
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { task: 'task1' }],
-          [10, 'out', 'log', 'fire-and-forget:task1'],
-          [10, 'out', 'next', { task: 'task1' }],
-
-          [20, 'in',  'source.next', { task: 'task2' }],
-          [20, 'out', 'log', 'fire-and-forget:task2'],
-          [20, 'out', 'next', { task: 'task2' }],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'source.dispose'],
-        ],
-      })
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { task: 'task1' }],
+            ['log', 'fire-and-forget:task1'],
+            ['next', { task: 'task1' }],
+          ],
+          20: [
+            ['source.next', { task: 'task2' }],
+            ['log', 'fire-and-forget:task2'],
+            ['next', { task: 'task2' }],
+          ],
+          30: [
+            ['dispose'],
+            ['source.dispose'],
+          ],
+        },
+      });
     });
 
     it('should immediately dispose effect if store is disposed synchronously during effect creation', async () => {
@@ -175,23 +197,27 @@ describe('React', () => {
             observe: (observer) => (store = system.observe(observer))
           }
         },
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { task: 'task1' }],
-          [10, 'out', 'log', 'effect:start:task1'],
-          [10, 'out', 'next', { task: 'task1' }],
-
-          [20, 'in',  'source.next', { task: 'cancel_sync' }],
-          [20, 'out', 'log', 'effect:teardown:task1'],
-          [20, 'out', 'log', 'effect:start:cancel_sync'],
-          [20, 'out', 'source.dispose'],
-          [20, 'out', 'log', 'effect:teardown:cancel_sync'],
-
-          [30, 'in',  'source.next', { task: 'task2' }],
-        ],
-      })
-    })
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { task: 'task1' }],
+            ['log', 'effect:start:task1'],
+            ['next', { task: 'task1' }],
+          ],
+          20: [
+            ['source.next', { task: 'cancel_sync' }],
+            ['log', 'effect:teardown:task1'],
+            ['log', 'effect:start:cancel_sync'],
+            ['source.dispose'],
+            ['log', 'effect:teardown:cancel_sync'],
+          ],
+          30: [
+            ['source.next', { task: 'task2' }],
+          ],
+        },
+      });
+    });
   });
   describe('Asynchronous Effects & Feedback Loop', () => {
     type State = {
@@ -222,22 +248,26 @@ describe('React', () => {
             }, 
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { userId: 'u1' }],
-          [10, 'out', 'log', 'fetch:start:u1'],
-          [10, 'out', 'next', { userId: 'u1' }],
-
-          [40, 'out', 'log', 'fetch:complete:u1'],
-          [40, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u1' }],
-          [40, 'in',  'source.next', { userId: 'u1', userName: 'User_u1' }],
-          [40, 'out', 'next', { userId: 'u1', userName: 'User_u1' }],
-
-          [50, 'in',  'dispose'],
-          [50, 'out', 'log', 'fetch:cancel:u1'],
-          [50, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { userId: 'u1' }],
+            ['log', 'fetch:start:u1'],
+            ['next', { userId: 'u1' }],
+          ],
+          40: [
+            ['log', 'fetch:complete:u1'],
+            ['source.dispatch', { type: 'fetched', name: 'User_u1' }],
+            ['source.next', { userId: 'u1', userName: 'User_u1' }],
+            ['next', { userId: 'u1', userName: 'User_u1' }],
+          ],
+          50: [
+            ['dispose'],
+            ['log', 'fetch:cancel:u1'],
+            ['source.dispose'],
+          ],
+        },
       });
     });
     it('should cancel in-flight async effect when new request arrives before completion', async () => {
@@ -259,27 +289,32 @@ describe('React', () => {
             } 
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { userId: 'u1' }],
-          [10, 'out', 'log', 'fetch:start:u1'],
-          [10, 'out', 'next', { userId: 'u1' }],
-
-          [20, 'in',  'source.next', { userId: 'u2' }],
-          [20, 'out', 'log', 'fetch:cancel:u1'],
-          [20, 'out', 'log', 'fetch:start:u2'],
-          [20, 'out', 'next', { userId: 'u2' }],
-
-          [50, 'out', 'log', 'fetch:complete:u2'],
-          [50, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u2' }],
-          [50, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
-          [50, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
-
-          [60, 'in',  'dispose'],
-          [60, 'out', 'log', 'fetch:cancel:u2'],
-          [60, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { userId: 'u1' }],
+            ['log', 'fetch:start:u1'],
+            ['next', { userId: 'u1' }],
+          ],
+          20: [
+            ['source.next', { userId: 'u2' }],
+            ['log', 'fetch:cancel:u1'],
+            ['log', 'fetch:start:u2'],
+            ['next', { userId: 'u2' }],
+          ],
+          50: [
+            ['log', 'fetch:complete:u2'],
+            ['source.dispatch', { type: 'fetched', name: 'User_u2' }],
+            ['source.next', { userId: 'u2', userName: 'User_u2' }],
+            ['next', { userId: 'u2', userName: 'User_u2' }],
+          ],
+          60: [
+            ['dispose'],
+            ['log', 'fetch:cancel:u2'],
+            ['source.dispose'],
+          ],
+        },
       });
 
     });
@@ -299,29 +334,35 @@ describe('React', () => {
             } 
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { userId: 'u1' }],
-          [10, 'out', 'log', 'fetch:start:u1'],
-          [10, 'out', 'next', { userId: 'u1' }],
-
-          [20, 'in',  'source.next', { userId: 'u2' }],
-          [20, 'out', 'log', 'fetch:cancel:u1'],
-          [20, 'out', 'log', 'fetch:start:u2'],
-          [20, 'out', 'next', { userId: 'u2' }],
-
-          [40, 'out', 'log', 'stale:timer:u1'],
-
-          [50, 'out', 'log', 'stale:timer:u2'],
-          [50, 'out', 'source.dispatch', { type: 'fetched', name: 'User_u2' }],
-          [50, 'in',  'source.next', { userId: 'u2', userName: 'User_u2' }],
-          [50, 'out', 'next', { userId: 'u2', userName: 'User_u2' }],
-
-          [60, 'in',  'dispose'],
-          [60, 'out', 'log', 'fetch:cancel:u2'],
-          [60, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { userId: 'u1' }],
+            ['log', 'fetch:start:u1'],
+            ['next', { userId: 'u1' }],
+          ],
+          20: [
+            ['source.next', { userId: 'u2' }],
+            ['log', 'fetch:cancel:u1'],
+            ['log', 'fetch:start:u2'],
+            ['next', { userId: 'u2' }],
+          ],
+          40: [
+            ['log', 'stale:timer:u1'],
+          ],
+          50: [
+            ['log', 'stale:timer:u2'],
+            ['source.dispatch', { type: 'fetched', name: 'User_u2' }],
+            ['source.next', { userId: 'u2', userName: 'User_u2' }],
+            ['next', { userId: 'u2', userName: 'User_u2' }],
+          ],
+          60: [
+            ['dispose'],
+            ['log', 'fetch:cancel:u2'],
+            ['source.dispose'],
+          ],
+        },
       });
 
     });
@@ -341,19 +382,23 @@ describe('React', () => {
             } 
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { userId: 'u1' }],
-          [10, 'out', 'log', 'effect:start:u1'],
-          [10, 'out', 'next', { userId: 'u1' }],
-
-          [20, 'in',  'dispose'],
-          [20, 'out', 'log', 'effect:teardown:u1'],
-          [20, 'out', 'source.dispose'],
-
-          [40, 'out', 'log', 'effect:fired:u1'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { userId: 'u1' }],
+            ['log', 'effect:start:u1'],
+            ['next', { userId: 'u1' }],
+          ],
+          20: [
+            ['dispose'],
+            ['log', 'effect:teardown:u1'],
+            ['source.dispose'],
+          ],
+          40: [
+            ['log', 'effect:fired:u1'],
+          ],
+        },
       });
 
     });
@@ -372,18 +417,22 @@ describe('React', () => {
             }
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { step: 1 }],
-          [10, 'out', 'log', 'batch:start:1'],
-          [10, 'out', 'next', { step: 1 }],
-
-          [20, 'out', 'source.dispatch', ['stepA', 'stepB']],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { step: 1 }],
+            ['log', 'batch:start:1'],
+            ['next', { step: 1 }],
+          ],
+          20: [
+            ['source.dispatch', ['stepA', 'stepB']],
+          ],
+          30: [
+            ['dispose'],
+            ['source.dispose'],
+          ],
+        },
       })
     });
   });
@@ -407,25 +456,30 @@ describe('React', () => {
             },
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { filter: { text: 'react', page: 1 }}],
-          [10, 'out', 'log', 'search:react:p1'],
-          [10, 'out', 'next', { filter: { text: 'react', page: 1 }}],
-
-          [20, 'in',  'source.next', { filter: { text: 'react', page: 1 }}],
-          [20, 'out', 'next', { filter: { text: 'react', page: 1 }}],
-
-          [30, 'in',  'source.next', { filter: { text: 'react', page: 2 }}],
-          [30, 'out', 'log', 'cancel:react:p1'],
-          [30, 'out', 'log', 'search:react:p2'],
-          [30, 'out', 'next', { filter: { text: 'react', page: 2 }}],
-
-          [40, 'in',  'dispose'],
-          [40, 'out', 'log', 'cancel:react:p2'],
-          [40, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { filter: { text: 'react', page: 1 }}],
+            ['log', 'search:react:p1'],
+            ['next', { filter: { text: 'react', page: 1 }}],
+          ],
+          20: [
+            ['source.next', { filter: { text: 'react', page: 1 }}],
+            ['next', { filter: { text: 'react', page: 1 }}],
+          ],
+          30: [
+            ['source.next', { filter: { text: 'react', page: 2 }}],
+            ['log', 'cancel:react:p1'],
+            ['log', 'search:react:p2'],
+            ['next', { filter: { text: 'react', page: 2 }}],
+          ],
+          40: [
+            ['dispose'],
+            ['log', 'cancel:react:p2'],
+            ['source.dispose'],
+          ],
+        },
       })
     });
     it('should re-trigger effect when areEqual is not provided and request returns a new object reference', async () => {
@@ -440,23 +494,27 @@ describe('React', () => {
             },
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', { filter: { text: 'react', page: 1 }}],
-          [10, 'out', 'log', 'search:react:p1'],
-          [10, 'out', 'next', { filter: { text: 'react', page: 1 }}],
-
-          [20, 'in',  'source.next', { filter: { text: 'react', page: 1 }}],
-          [20, 'out', 'log', 'cancel:react:p1'],
-          [20, 'out', 'log', 'search:react:p1'],
-          [20, 'out', 'next', { filter: { text: 'react', page: 1 }}],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'log', 'cancel:react:p1'],
-          [30, 'out', 'source.dispose'],
-        ],
-      })
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', { filter: { text: 'react', page: 1 }}],
+            ['log', 'search:react:p1'],
+            ['next', { filter: { text: 'react', page: 1 }}],
+          ],
+          20: [
+            ['source.next', { filter: { text: 'react', page: 1 }}],
+            ['log', 'cancel:react:p1'],
+            ['log', 'search:react:p1'],
+            ['next', { filter: { text: 'react', page: 1 }}],
+          ],
+          30: [
+            ['dispose'],
+            ['log', 'cancel:react:p1'],
+            ['source.dispose'],
+          ],
+        },
+      });
     });
   });
   describe('External Event Passthrough', () => {
@@ -472,28 +530,34 @@ describe('React', () => {
             effect: () => {},
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', 0],
-          [10, 'out', 'next', 0],
-
-          [20, 'in',  'dispatch', 'inc'],
-          [20, 'out', 'source.dispatch', 'inc'],
-          [20, 'in',  'source.next', 1],
-          [20, 'out', 'next', 1],
-
-          [30, 'in',  'dispatch', ['inc', 'dec', 'reset']],
-          [30, 'out', 'source.dispatch', ['inc', 'dec', 'reset']],
-          [30, 'in',  'source.next', 0],
-          [30, 'out', 'next', 0],
-
-          [40, 'in',  'dispose'],
-          [40, 'out', 'source.dispose'],
-
-          [50, 'in', 'dispatch', 'inc'],
-          [50, 'in', 'source.next', 5],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', 0],
+            ['next', 0],
+          ],
+          20: [
+            ['dispatch', 'inc'],
+            ['source.dispatch', 'inc'],
+            ['source.next', 1],
+            ['next', 1],
+          ],
+          30: [
+            ['dispatch', ['inc', 'dec', 'reset']],
+            ['source.dispatch', ['inc', 'dec', 'reset']],
+            ['source.next', 0],
+            ['next', 0],
+          ],
+          40: [
+            ['dispose'],
+            ['source.dispose'],
+          ],
+          50: [
+            ['dispatch', 'inc'],
+            ['source.next', 5],
+          ],
+        },
       });
     });
     // TODO: refactor this test by moving it to test util tests, since this is mainly testing `test util` not `react` operator.
@@ -506,22 +570,26 @@ describe('React', () => {
             effect: () => { },
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', 0],
-          [10, 'out', 'next', 0],
-
-          [20, 'in',  'dispatch', 'inc'],
-          [20, 'out', 'source.dispatch', 'inc'],
-          [20, 'in',  'dispatch', 'inc'],
-          [20, 'out', 'source.dispatch', 'inc'],
-          [20, 'in',  'source.next', 2],
-          [20, 'out', 'next', 2],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', 0],
+            ['next', 0],
+          ],
+          20: [
+            ['dispatch', 'inc'],
+            ['source.dispatch', 'inc'],
+            ['dispatch', 'inc'],
+            ['source.dispatch', 'inc'],
+            ['source.next', 2],
+            ['next', 2],
+          ],
+          30: [
+            ['dispose'],
+            ['source.dispose'],
+          ],
+        },
       })
     });
     it('should not forward empty array dispatch to source', async () => {
@@ -533,17 +601,21 @@ describe('React', () => {
             effect: () => {},
           }),
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'source.next', 0],
-          [10, 'out', 'next', 0],
-
-          [20, 'in',  'dispatch', []],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'source.dispose'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['source.next', 0],
+            ['next', 0],
+          ],
+          20: [
+            ['dispatch', []],
+          ],
+          30: [
+            ['dispose'],
+            ['source.dispose'],
+          ],
+        },
       });
     });
   });
@@ -562,41 +634,44 @@ describe('React', () => {
             }
           })
         ),
-        events: [
-          [10, 'in',  'observe'],
-          [10, 'out', 'source.observe'],
-          [10, 'in',  'observe2'],
-          [10, 'out', 'source.observe2'],
-          
-          [10, 'in',  'source.next', { query: 'r1' }],
-          [10, 'out', 'log', 'effect:start:r1'],
-          [10, 'out', 'next', { query: 'r1' }],
-          [10, 'in',  'source.next2', { query: 'r2' }],
-          [10, 'out', 'log', 'effect:start:r2'],
-          [10, 'out', 'next2', { query: 'r2' }],
-
-          [20, 'in',  'dispatch', 'update'],
-          [20, 'out', 'source.dispatch', 'update'],
-          [20, 'in',  'source.next', { query: 'r1_next' }],
-          [20, 'out', 'log', 'effect:cancel:r1'],
-          [20, 'out', 'log', 'effect:start:r1_next'],
-          [20, 'out', 'next', { query: 'r1_next' }],
-
-          [20, 'in',  'dispatch2', 'update'],
-          [20, 'out', 'source.dispatch2', 'update'],
-          [20, 'in',  'source.next2', { query: 'r2_next' }],
-          [20, 'out', 'log', 'effect:cancel:r2'],
-          [20, 'out', 'log', 'effect:start:r2_next'],
-          [20, 'out', 'next2', { query: 'r2_next' }],
-
-          [30, 'in',  'dispose'],
-          [30, 'out', 'log', 'effect:cancel:r1_next'],
-          [30, 'out', 'source.dispose'],
-
-          [40, 'in',  'dispose2'],
-          [40, 'out', 'log', 'effect:cancel:r2_next'],
-          [40, 'out', 'source.dispose2'],
-        ],
+        events: {
+          10: [
+            ['observe'],
+            ['source.observe'],
+            ['observe2'],
+            ['source.observe2'],
+            ['source.next', { query: 'r1' }],
+            ['log', 'effect:start:r1'],
+            ['next', { query: 'r1' }],
+            ['source.next2', { query: 'r2' }],
+            ['log', 'effect:start:r2'],
+            ['next2', { query: 'r2' }],
+          ],
+          20: [
+            ['dispatch', 'update'],
+            ['source.dispatch', 'update'],
+            ['source.next', { query: 'r1_next' }],
+            ['log', 'effect:cancel:r1'],
+            ['log', 'effect:start:r1_next'],
+            ['next', { query: 'r1_next' }],
+            ['dispatch2', 'update'],
+            ['source.dispatch2', 'update'],
+            ['source.next2', { query: 'r2_next' }],
+            ['log', 'effect:cancel:r2'],
+            ['log', 'effect:start:r2_next'],
+            ['next2', { query: 'r2_next' }],
+          ],
+          30: [
+            ['dispose'],
+            ['log', 'effect:cancel:r1_next'],
+            ['source.dispose'],
+          ],
+          40: [
+            ['dispose2'],
+            ['log', 'effect:cancel:r2_next'],
+            ['source.dispose2'],
+          ],
+        },
       });
     });
   });
