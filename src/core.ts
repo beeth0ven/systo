@@ -16,11 +16,11 @@ interface Dispatcher<Event> {
   dispatch(event: Event | readonly Event[]): void;
 }
 
-interface Store<State, Event> extends Disposable, Dispatcher<Event> {
+interface Store<out State, in Event = never> extends Disposable, Dispatcher<Event> {
   [StateBrand]?: State;
 }
 
-interface System<State, Event> {
+interface System<out State, in Event = never> {
   observe(observer: Observer<State>): Store<State, Event>;
 }
 
