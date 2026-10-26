@@ -1,3 +1,5 @@
+declare const StateBrand: unique symbol;
+
 interface Disposable {
   dispose(): void;
 }
@@ -14,8 +16,9 @@ interface Dispatcher<Event> {
   dispatch(event: Event | readonly Event[]): void;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- State is required for structural consistency but not used inside the interface body
-interface Store<State, Event> extends Disposable, Dispatcher<Event> {}
+interface Store<State, Event> extends Disposable, Dispatcher<Event> {
+  [StateBrand]?: State;
+}
 
 interface System<State, Event> {
   observe(observer: Observer<State>): Store<State, Event>;
