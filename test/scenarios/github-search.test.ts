@@ -39,7 +39,7 @@ describe('Requirement: Github Search', () => {
             }
           },
         }),
-        react<string, GithubSearchState, GithubSearchEvent>({
+        react({
           request: (state) => state.status === 'loading' ? state.query : undefined,
           effect: (request, dispatch) => {
             const timerId = setTimeout(() => {

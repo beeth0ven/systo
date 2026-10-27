@@ -3,8 +3,8 @@ import { applyReduce } from '../utils/index.js';
 import { BaseStore, BaseSystem } from './base.js';
 
 interface ScanConfig<State, Event> {
-  initialState: Readonly<State>;
-  reduce: (state: Readonly<State>, event: Readonly<Event>) => Readonly<State>;
+  initialState: State;
+  reduce: (state: Readonly<State>, event: Event) => Readonly<State>;
 }
 
 function scan<State, Event>(config: ScanConfig<State, Event>): System<State, Event> {
