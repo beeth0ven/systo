@@ -7,17 +7,23 @@ interface PipeConfig<SourceState, SourceEvent> {
 
 abstract class BasePipeSystem<
   Config,
-  State,
-  Event,
-  SourceState = State,
-  SourceEvent = Event,
+  SourceState,
+  SourceEvent,
+  State = SourceState,
+  Event = SourceEvent,
 > extends BaseSystem<Config & PipeConfig<SourceState, SourceEvent>, State, Event> {
   protected abstract _onObserve(
     observer: Observer<State>,
-  ): BasePipeStore<Config, State, Event, SourceState, SourceEvent>;
+  ): BasePipeStore<Config, SourceState, SourceEvent, State, Event>;
 }
 
-abstract class BasePipeStore<Config, State, Event, SourceState = State, SourceEvent = Event>
+abstract class BasePipeStore<
+  Config,
+  SourceState,
+  SourceEvent,
+  State = SourceState,
+  Event = SourceEvent,
+>
   extends BaseStore<Config & PipeConfig<SourceState, SourceEvent>, State, Event>
   implements Observer<SourceState>
 {

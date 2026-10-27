@@ -24,7 +24,7 @@ interface System<out State, in Event = never> {
   observe(observer: Observer<State>): Store<State, Event>;
 }
 
-type Operator<State, Event, SourceState = State, SourceEvent = Event> = (
+type Operator<SourceState, SourceEvent, State = SourceState, Event = SourceEvent> = (
   source: System<SourceState, SourceEvent>,
 ) => System<State, Event>;
 

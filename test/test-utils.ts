@@ -57,7 +57,7 @@ function isInput<State, Event, SourceState, SourceEvent>(
   return INPUT_TYPES.has(testEvent[0]);
 }
 
-interface SystemTestConfig<State, Event, SourceState, SourceEvent> {
+interface SystemTestConfig<State, Event, SourceState = never, SourceEvent = never> {
   systemFactory: (
     mockSource: System<SourceState, SourceEvent>,
     log: (message: string) => void,
@@ -65,7 +65,7 @@ interface SystemTestConfig<State, Event, SourceState, SourceEvent> {
   events: TimedTestEvents<State, Event, SourceState, SourceEvent>;
 }
 
-async function runSystemTest<State, Event, SourceState, SourceEvent>(
+async function runSystemTest<State, Event, SourceState = never, SourceEvent = never>(
   config: SystemTestConfig<State, Event, SourceState, SourceEvent>,
 ): Promise<void> {
   vi.useFakeTimers();
