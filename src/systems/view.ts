@@ -1,7 +1,7 @@
 import { Observer, Operator } from '../core.js';
 import { BasePipeStore, BasePipeSystem } from './base-pipe.js';
 
-interface ViewConfig<State, Event, LocalState, SourceState, SourceEvent> {
+interface ViewConfig<SourceState, SourceEvent, LocalState, State, Event> {
   initialLocalState: LocalState;
 
   /**
@@ -24,30 +24,30 @@ interface ViewConfig<State, Event, LocalState, SourceState, SourceEvent> {
   toSourceEvent?: (event: Event, localState: LocalState) => SourceEvent | SourceEvent[] | undefined;
 }
 
-function view<State, Event, LocalState, SourceState, SourceEvent>(
-  config: ViewConfig<State, Event, LocalState, SourceState, SourceEvent>,
-): Operator<State, Event, SourceState, SourceEvent> {
+function view<SourceState, SourceEvent, LocalState, State, Event>(
+  config: ViewConfig<SourceState, SourceEvent, LocalState, State, Event>,
+): Operator<SourceState, SourceEvent, State, Event> {
   return (source) => new View({ ...config, source });
 }
 
-class View<State, Event, LocalState, SourceState, SourceEvent> extends BasePipeSystem<
-  ViewConfig<State, Event, LocalState, SourceState, SourceEvent>,
-  State,
-  Event,
+class View<SourceState, SourceEvent, LocalState, State, Event> extends BasePipeSystem<
+  ViewConfig<SourceState, SourceEvent, LocalState, State, Event>,
   SourceState,
-  SourceEvent
+  SourceEvent,
+  State,
+  Event
 > {
   protected _onObserve(observer: Observer<State>) {
     return new ViewStore(this._config, observer);
   }
 }
 
-class ViewStore<State, Event, LocalState, SourceState, SourceEvent> extends BasePipeStore<
-  ViewConfig<State, Event, LocalState, SourceState, SourceEvent>,
-  State,
-  Event,
+class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends BasePipeStore<
+  ViewConfig<SourceState, SourceEvent, LocalState, State, Event>,
   SourceState,
-  SourceEvent
+  SourceEvent,
+  State,
+  Event
 > {
   private _localState!: LocalState;
   private _sourceState!: SourceState;
