@@ -17,7 +17,7 @@ interface Dispatcher<Event> {
 }
 
 interface Store<out State, in Event = never> extends Disposable, Dispatcher<Event> {
-  [StateBrand]?: State;
+  readonly [StateBrand]?: State;
 }
 
 interface System<out State, in Event = never> {
