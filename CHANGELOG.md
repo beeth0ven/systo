@@ -1,6 +1,30 @@
 # Changelog
 
 
+## v0.1.0-alpha.6
+
+[compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
+
+### 💅 Refactors
+
+- **core:** Use unique symbol brand for Store state type ([9f2fe71](https://github.com/beeth0ven/systo/commit/9f2fe71))
+- **core:** Add variance annotations to Store and System types ([6ff369f](https://github.com/beeth0ven/systo/commit/6ff369f))
+- **core:** Reorder generic parameters to source-first order ([678b5ea](https://github.com/beeth0ven/systo/commit/678b5ea))
+- **core:** Simplify scan config types for inference ([f8174bc](https://github.com/beeth0ven/systo/commit/f8174bc))
+- **core:** Make Store state brand readonly ([5f72462](https://github.com/beeth0ven/systo/commit/5f72462))
+
+### ✅ Tests
+
+- **react:** Fix async effect timing and refactor test input handling ([f0d31a2](https://github.com/beeth0ven/systo/commit/f0d31a2))
+- **react:** Add dispatch ordering test and match source dispatches by event ([acda8af](https://github.com/beeth0ven/systo/commit/acda8af))
+- **util:** Support multiple source connections in test utils ([845f2b5](https://github.com/beeth0ven/systo/commit/845f2b5))
+- **react:** Update multiple observer test to use dispatch events ([342a6cf](https://github.com/beeth0ven/systo/commit/342a6cf))
+- **util:** Group test events by timestamp ([c43726e](https://github.com/beeth0ven/systo/commit/c43726e))
+
+### ❤️ Contributors
+
+- Beeth0ven <beeth0vendev@gmail.com>
+
 ## v0.1.0-alpha.5
 
 [compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.4...v0.1.0-alpha.5)
