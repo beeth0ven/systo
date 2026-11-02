@@ -1,4 +1,4 @@
-import { Disposable, Observable, Observer, Operator } from '../core.js';
+import { Disposable, EventOrEvents, Observable, Observer, Operator } from '../core.js';
 import { TurnScheduler } from '../utils/index.js';
 import { BasePipeStore, PipeConfig } from './base-pipe.js';
 import { BaseStore, BaseSystem } from './base.js';
@@ -68,7 +68,7 @@ class SharedSourceStore<State, Event>
     });
   }
 
-  protected _onDispatch(event: Event | readonly Event[]): void {
+  protected _onDispatch(event: EventOrEvents<Event>): void {
     this._send(event);
   }
 
@@ -120,7 +120,7 @@ class ShareStore<State, Event>
     this._emit(state);
   }
 
-  protected _onDispatch(event: Event | readonly Event[]): void {
+  protected _onDispatch(event: EventOrEvents<Event>): void {
     this._source?.dispatch(event);
   }
 

@@ -1,4 +1,4 @@
-import { Observer, Store, System } from '../core.js';
+import { EventOrEvents, Observer, Store, System } from '../core.js';
 import { BaseStore, BaseSystem } from './base.js';
 
 interface PipeConfig<SourceState, SourceEvent> {
@@ -42,7 +42,7 @@ abstract class BasePipeStore<
 
   protected abstract _onNext(sourceState: SourceState): void;
 
-  protected _send(sourceEvent: SourceEvent | readonly SourceEvent[]): void {
+  protected _send(sourceEvent: EventOrEvents<SourceEvent>): void {
     if (this._isDisposed) {
       return;
     }

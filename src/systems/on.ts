@@ -1,10 +1,10 @@
-import { Observer, Operator } from '../core.js';
+import { EventOrEvents, Observer, Operator } from '../core.js';
 import { BasePipeStore, BasePipeSystem } from './base-pipe.js';
 
 interface OnConfig<State, Event> {
   init?: () => void;
   next?: (state: State) => void;
-  dispatch?: (event: Event | readonly Event[]) => void;
+  dispatch?: (event: EventOrEvents<Event>) => void;
   dispose?: () => void;
 }
 
@@ -29,7 +29,7 @@ class OnStore<State, Event> extends BasePipeStore<OnConfig<State, Event>, State,
     this._emit(state);
   }
 
-  _onDispatch(event: Event | readonly Event[]): void {
+  _onDispatch(event: EventOrEvents<Event>): void {
     this._config.dispatch?.(event);
     this._send(event);
   }

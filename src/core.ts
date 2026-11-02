@@ -12,8 +12,10 @@ interface Observable<Value> {
   observe(observer: Observer<Value>): Disposable;
 }
 
+type EventOrEvents<Event> = Event | readonly Event[];
+
 interface Dispatcher<Event> {
-  dispatch(event: Event | readonly Event[]): void;
+  dispatch(event: EventOrEvents<Event>): void;
 }
 
 interface Store<out State, in Event = never> extends Disposable, Dispatcher<Event> {
@@ -35,6 +37,7 @@ export {
   Disposable,
   Observer,
   Observable,
+  EventOrEvents,
   Dispatcher,
   Store,
   System,

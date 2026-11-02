@@ -1,4 +1,4 @@
-import { Observer, Store, System } from '../core.js';
+import { EventOrEvents, Observer, Store, System } from '../core.js';
 import { TurnScheduler } from '../utils/index.js';
 
 abstract class BaseSystem<Config, State, Event> implements System<State, Event> {
@@ -44,7 +44,7 @@ abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
     });
   }
 
-  dispatch(event: Event | readonly Event[]): void {
+  dispatch(event: EventOrEvents<Event>): void {
     if (this._isDisposed) {
       return;
     }
@@ -59,7 +59,7 @@ abstract class BaseStore<Config, State, Event> implements Store<State, Event> {
     });
   }
 
-  protected abstract _onDispatch(event: Event | readonly Event[]): void;
+  protected abstract _onDispatch(event: EventOrEvents<Event>): void;
 
   dispose(): void {
     if (this._isDisposed) {

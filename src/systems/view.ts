@@ -1,4 +1,4 @@
-import { Observer, Operator } from '../core.js';
+import { EventOrEvents, Observer, Operator } from '../core.js';
 import { BasePipeStore, BasePipeSystem } from './base-pipe.js';
 
 interface ViewConfig<SourceState, SourceEvent, LocalState, State, Event> {
@@ -21,7 +21,7 @@ interface ViewConfig<SourceState, SourceEvent, LocalState, State, Event> {
    * If an event is both local and source (e.g., optimistic update),
    * both `reduceLocal` and `toSourceEvent` can run!
    */
-  toSourceEvent?: (event: Event, localState: LocalState) => SourceEvent | SourceEvent[] | undefined;
+  toSourceEvent?: (event: Event, localState: LocalState) => EventOrEvents<SourceEvent> | undefined;
 }
 
 function view<SourceState, SourceEvent, LocalState, State, Event>(
@@ -106,7 +106,7 @@ class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends Base
     this._setSourceState(sourceState);
   }
 
-  protected _onDispatch(event: Event | readonly Event[]): void {
+  protected _onDispatch(event: EventOrEvents<Event>): void {
     this._dispatchDepth += 1;
     try {
       const sourceEvents: SourceEvent[] = [];
@@ -130,7 +130,7 @@ class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends Base
       if (Array.isArray(sourceEvent)) {
         sourceEvents.push(...sourceEvent);
       } else if (sourceEvent !== undefined) {
-        sourceEvents.push(sourceEvent);
+        sourceEvents.push(sourceEvent as SourceEvent);
       }
     }
     if (this._config.reduceLocal) {

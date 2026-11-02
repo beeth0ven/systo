@@ -1,4 +1,4 @@
-import { Observer, Operator, Teardown } from '../core.js';
+import { EventOrEvents, Observer, Operator, Teardown } from '../core.js';
 import { SingleAssignmentDisposable, toDisposable } from '../utils/disposable.js';
 import { BasePipeStore, BasePipeSystem } from './base-pipe.js';
 
@@ -13,7 +13,7 @@ interface ReactConfig<Request, State, Event> {
    * Executes the side-effect when a new distinct request is produced.
    * Can return an optional `Teardown` (a `Disposable`, a cleanup function, or void) to cancel the pending operation.
    */
-  effect: (request: Request, dispatch: (event: Event | readonly Event[]) => void) => Teardown;
+  effect: (request: Request, dispatch: (event: EventOrEvents<Event>) => void) => Teardown;
 
   /**
    * Optional equality comparator (defaults to reference/shallow equality `===`).
@@ -54,7 +54,7 @@ class ReactStore<Request, State, Event> extends BasePipeStore<
     this._emit(sourceState);
   }
 
-  protected _onDispatch(event: Event | readonly Event[]): void {
+  protected _onDispatch(event: EventOrEvents<Event>): void {
     this._send(event);
   }
 
