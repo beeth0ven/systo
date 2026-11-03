@@ -13,7 +13,7 @@ describe('React', () => {
       | { type: 'ping' };
 
     it('should trigger effect on request change and cancel on null or disposal', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -68,7 +68,7 @@ describe('React', () => {
       });
     });
     it('should not run effect when initial state produces null or undefined request', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -109,7 +109,7 @@ describe('React', () => {
     type Event = string;
     
     it('should support Disposable object returned from effect', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -145,7 +145,7 @@ describe('React', () => {
       });
     });
     it('should support void / no teardown returned from effect', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -177,7 +177,7 @@ describe('React', () => {
     });
 
     it('should immediately dispose effect if store is disposed synchronously during effect creation', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => {
           let store: Store<State, Event>;
           const system = pipe(
@@ -230,7 +230,7 @@ describe('React', () => {
       | { type: 'error'; message: string };
       
     it('should handle async effect and dispatch result to source', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -271,7 +271,7 @@ describe('React', () => {
       });
     });
     it('should cancel in-flight async effect when new request arrives before completion', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -319,7 +319,7 @@ describe('React', () => {
 
     });
     it('should drop dispatch calls from stale effects if async timer was not cleared', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -367,7 +367,7 @@ describe('React', () => {
 
     });
     it('should drop dispatch calls if async effect resolves after store disposal', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -406,7 +406,7 @@ describe('React', () => {
       type BatchState = { step: number | null };
       type BatchEvent = 'stepA' | 'stepB';
 
-      await runSystemTest<BatchState, BatchEvent, BatchState, BatchEvent>({
+      await runSystemTest<BatchState, BatchEvent>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -444,7 +444,7 @@ describe('React', () => {
     type Event = { type: 'loaded'; count: number };
 
     it('should use custom areEqual to prevent re-running effect on object identity change', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -483,7 +483,7 @@ describe('React', () => {
       })
     });
     it('should re-trigger effect when areEqual is not provided and request returns a new object reference', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
@@ -522,7 +522,7 @@ describe('React', () => {
     type Event = 'inc' | 'dec' | 'reset';
 
     it('should forward single and batch external dispatches to source', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
           react({
@@ -562,7 +562,7 @@ describe('React', () => {
     });
     // TODO: refactor this test by moving it to test util tests, since this is mainly testing `test util` not `react` operator.
     it('should associate reactive response with correct dispatch occurrence when multiple dispatches occur at the same timestamp', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
           react({
@@ -593,7 +593,7 @@ describe('React', () => {
       })
     });
     it('should not forward empty array dispatch to source', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
           react({
@@ -623,7 +623,7 @@ describe('React', () => {
     type State = { query: string };
     type Event = string;
     it('should maintain independent stores and effects for each observer', async () => {
-      await runSystemTest<State, Event, State, Event>({
+      await runSystemTest<State, Event>({
         systemFactory: (mockSource, log) => pipe(
           mockSource,
           react({
