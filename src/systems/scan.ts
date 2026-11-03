@@ -1,4 +1,4 @@
-import { Observer, System } from '../core.js';
+import { EventOrEvents, Observer, System } from '../core.js';
 import { applyReduce } from '../utils/index.js';
 import { BaseStore, BaseSystem } from './base.js';
 
@@ -25,7 +25,7 @@ class ScanStore<State, Event> extends BaseStore<ScanConfig<State, Event>, State,
     this._emit(this._state);
   }
 
-  protected _onDispatch(event: Event | readonly Event[]): void {
+  protected _onDispatch(event: EventOrEvents<Event>): void {
     this._state = applyReduce(this._config.reduce, this._state, event);
     this._emit(this._state);
   }

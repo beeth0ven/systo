@@ -1,12 +1,12 @@
 import { isDeepStrictEqual } from 'node:util';
 import { expect, vi } from 'vitest';
-import { Observer, Store, System } from '../src/core.js';
+import { EventOrEvents, Observer, Store, System } from '../src/core.js';
 
 type Input<Event, SourceState> =
   | ['observe']
   | ['observe2']
-  | ['dispatch', Event | readonly Event[]]
-  | ['dispatch2', Event | readonly Event[]]
+  | ['dispatch', EventOrEvents<Event>]
+  | ['dispatch2', EventOrEvents<Event>]
   | ['dispose']
   | ['dispose2']
   | ['source.next', SourceState]
@@ -17,8 +17,8 @@ type Output<State, SourceEvent> =
   | ['next2', State]
   | ['source.observe']
   | ['source.observe2']
-  | ['source.dispatch', SourceEvent | readonly SourceEvent[]]
-  | ['source.dispatch2', SourceEvent | readonly SourceEvent[]]
+  | ['source.dispatch', EventOrEvents<SourceEvent>]
+  | ['source.dispatch2', EventOrEvents<SourceEvent>]
   | ['source.dispose']
   | ['source.dispose2']
   | ['log', string];
@@ -33,7 +33,7 @@ type TimedOutput<State, SourceEvent> = [number, ...Output<State, SourceEvent>];
 interface SourceDispatchInput<SourceState, SourceEvent> {
   time: number;
   target: 1 | 2;
-  event: SourceEvent | readonly SourceEvent[];
+  event: EventOrEvents<SourceEvent>;
   emission?: { sourceState: SourceState };
   consumed: boolean;
 }
@@ -148,7 +148,7 @@ class Tester<State, Event, SourceState, SourceEvent> {
             throw new Error(`Tester only supports up to 2 source connections.`);
           }
           return {
-            dispatch: (event: SourceEvent | readonly SourceEvent[]) => {
+            dispatch: (event: EventOrEvents<SourceEvent>) => {
               this.record([isFirst ? 'source.dispatch' : 'source.dispatch2', event]);
               const input = this.sourceDispatchInputs
                 .find((input) => !input.consumed
