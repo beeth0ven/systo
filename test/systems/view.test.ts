@@ -23,7 +23,7 @@ describe('View', () => {
     type Event = LocalEvent | SourceEvent; 
 
     it('should handle single and batch dispatches correctly', async () => {
-      await runSystemTest<State, Event, SourceState, SourceEvent>({
+      await runSystemTest<SourceState, SourceEvent, State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
           view({
@@ -106,7 +106,7 @@ describe('View', () => {
     type Event = LocalEvent | { type: 'submit' };
 
     it('should accumulate local state sequentially during batching and forward accumulated result', async () => {
-      await runSystemTest<State, Event, SourceState, SourceEvent>({
+      await runSystemTest<SourceState, SourceEvent, State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
           view({

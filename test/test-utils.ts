@@ -2,7 +2,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { expect, vi } from 'vitest';
 import { EventOrEvents, Observer, Store, System } from '../src/core.js';
 
-type Input<Event, SourceState> =
+type Input<SourceState, Event> =
   | ['observe']
   | ['observe2']
   | ['dispatch', EventOrEvents<Event>]
@@ -12,7 +12,7 @@ type Input<Event, SourceState> =
   | ['source.next', SourceState]
   | ['source.next2', SourceState];
 
-type Output<State, SourceEvent> =
+type Output<SourceEvent, State> =
   | ['next', State]
   | ['next2', State]
   | ['source.observe']
@@ -23,12 +23,12 @@ type Output<State, SourceEvent> =
   | ['source.dispose2']
   | ['log', string];
 
-type TestEvent<State, Event, SourceState, SourceEvent> = 
-  | Input<Event, SourceState>
-  | Output<State, SourceEvent>;
+type TestEvent<SourceState, SourceEvent, State = SourceState, Event = SourceEvent> = 
+  | Input<SourceState, Event>
+  | Output<SourceEvent, State>;
 
-type TimedInput<Event, SourceState> = [number, ...Input<Event, SourceState>];
-type TimedOutput<State, SourceEvent> = [number, ...Output<State, SourceEvent>];
+type TimedInput<SourceState, Event> = [number, ...Input<SourceState, Event>];
+type TimedOutput<SourceEvent, State> = [number, ...Output<SourceEvent, State>];
 
 interface SourceDispatchInput<SourceState, SourceEvent> {
   time: number;
@@ -38,7 +38,7 @@ interface SourceDispatchInput<SourceState, SourceEvent> {
   consumed: boolean;
 }
 
-type TimedTestEvents<State, Event, SourceState, SourceEvent> = Record<number, TestEvent<State, Event, SourceState, SourceEvent>[]>;
+type TimedTestEvents<SourceState, SourceEvent, State = SourceState, Event = SourceEvent> = Record<number, TestEvent<SourceState, SourceEvent, State, Event>[]>;
 
 const INPUT_TYPES: Set<string> = new Set<Input<unknown, unknown>[0]>([
   'observe',
@@ -51,22 +51,22 @@ const INPUT_TYPES: Set<string> = new Set<Input<unknown, unknown>[0]>([
   'source.next2',
 ]);
 
-function isInput<State, Event, SourceState, SourceEvent>(
-  testEvent: TestEvent<State, Event, SourceState, SourceEvent>,
-): testEvent is Input<Event, SourceState> {
+function isInput<SourceState, SourceEvent, State = SourceState, Event = SourceEvent>(
+  testEvent: TestEvent<SourceState, SourceEvent, State, Event>,
+): testEvent is Input<SourceState, Event> {
   return INPUT_TYPES.has(testEvent[0]);
 }
 
-interface SystemTestConfig<State, Event, SourceState = never, SourceEvent = never> {
+interface SystemTestConfig<SourceState, SourceEvent, State = SourceState, Event = SourceEvent> {
   systemFactory: (
     mockSource: System<SourceState, SourceEvent>,
     log: (message: string) => void,
   ) => System<State, Event>;
-  events: TimedTestEvents<State, Event, SourceState, SourceEvent>;
+  events: TimedTestEvents<SourceState, SourceEvent, State, Event>;
 }
 
-async function runSystemTest<State, Event, SourceState = never, SourceEvent = never>(
-  config: SystemTestConfig<State, Event, SourceState, SourceEvent>,
+async function runSystemTest<SourceState, SourceEvent, State = SourceState, Event = SourceEvent>(
+  config: SystemTestConfig<SourceState, SourceEvent, State, Event>,
 ): Promise<void> {
   vi.useFakeTimers();
   const tester = new Tester(config);
@@ -80,11 +80,11 @@ async function runSystemTest<State, Event, SourceState = never, SourceEvent = ne
   }
 }
 
-class Tester<State, Event, SourceState, SourceEvent> {
-  public readonly mainInputs: TimedInput<Event, SourceState>[] = [];
+class Tester<SourceState, SourceEvent, State = SourceState, Event = SourceEvent> {
+  public readonly mainInputs: TimedInput<SourceState, Event>[] = [];
   public readonly sourceDispatchInputs: SourceDispatchInput<SourceState, SourceEvent>[] = [];
-  public readonly expectedOutputs: TimedOutput<State, SourceEvent>[] = [];
-  public readonly outputs: TimedOutput<State, SourceEvent>[] = [];
+  public readonly expectedOutputs: TimedOutput<SourceEvent, State>[] = [];
+  public readonly outputs: TimedOutput<SourceEvent, State>[] = [];
   private readonly startTime = Date.now();
   private store?: Store<State, Event>;
   private store2?: Store<State, Event>;
@@ -99,7 +99,7 @@ class Tester<State, Event, SourceState, SourceEvent> {
     next: (state) => this.record(['next2', state]),
   };
 
-  constructor(private readonly config: SystemTestConfig<State, Event, SourceState, SourceEvent>) {
+  constructor(private readonly config: SystemTestConfig<SourceState, SourceEvent, State, Event>) {
     for (const [timeKey, events] of Object.entries(config.events)) {
       const time = Number(timeKey);
       let sourceDispatchInput: SourceDispatchInput<SourceState, SourceEvent> | null = null;
@@ -179,7 +179,7 @@ class Tester<State, Event, SourceState, SourceEvent> {
     return Date.now() - this.startTime;
   }
 
-  private record(output: Output<State, SourceEvent>) {
+  private record(output: Output<SourceEvent, State>) {
     this.outputs.push([this.time, ...output]);
   }
 
