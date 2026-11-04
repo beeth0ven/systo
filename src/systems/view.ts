@@ -1,37 +1,75 @@
 import { EventOrEvents, Observer, Operator } from '../core.js';
 import { BasePipeStore, BasePipeSystem } from './base-pipe.js';
 
-interface ViewConfig<SourceState, SourceEvent, LocalState, State, Event> {
+interface ViewEvent<SourceEvent, LocalEvent> {
+  source?: SourceEvent;
+  local?: LocalEvent;
+}
+
+interface BaseViewConfig<SourceState, SourceEvent, LocalState, LocalEvent, State, Event> {
+  /**
+   * The initial local state.
+   */
   initialLocalState: LocalState;
 
   /**
-   * Combines local state and source state into the final State.
+   * Combine source state and local state into the final State.
+   * Optional when `State` is `SourceState & LocalState`.
+   * Defaults to `(sourceState, localState) => ({ ...sourceState, ...localState })`.
    */
-  combineState: (localState: LocalState, sourceState: SourceState) => State;
+  combineState?: (sourceState: SourceState, localState: LocalState) => State;
 
   /**
-   * (Optional) Local Reducer:
-   * Returns updated local state if the event affects local state.
+   * Event Router:
+   * Maps an incoming `Event` (with current `LocalState`) to `source` and/or `local` events.
+   * If an event affects both source and local (e.g., optimistic update),
+   * both `source` and `local` can be returned.
    */
-  reduceLocal?: (localState: LocalState, event: Event) => LocalState;
+  mapEvent: (event: Event, localState: LocalState) => ViewEvent<SourceEvent, LocalEvent>;
 
   /**
-   * (Optional) Source Event Forwarder:
-   * Returns SourceEvent(s) to dispatch to the source system if applicable.
-   * If an event is both local and source (e.g., optimistic update),
-   * both `reduceLocal` and `toSourceEvent` can run!
+   * Local Reducer:
+   * Strictly handles `LocalEvent` to return updated local state.
    */
-  toSourceEvent?: (event: Event, localState: LocalState) => EventOrEvents<SourceEvent> | undefined;
+  reduceLocal: (localState: LocalState, localEvent: LocalEvent) => LocalState;
 }
 
-function view<SourceState, SourceEvent, LocalState, State, Event>(
-  config: ViewConfig<SourceState, SourceEvent, LocalState, State, Event>,
+type ViewConfig<
+  SourceState,
+  SourceEvent,
+  LocalState,
+  LocalEvent,
+  State = SourceState & LocalState,
+  Event = SourceEvent | LocalEvent,
+> = BaseViewConfig<SourceState, SourceEvent, LocalState, LocalEvent, State, Event> &
+  ([SourceState & LocalState] extends [State]
+    ? unknown
+    : {
+        combineState: (sourceState: SourceState, localState: LocalState) => State;
+      });
+
+function view<
+  SourceState,
+  SourceEvent,
+  LocalState,
+  LocalEvent,
+  State = SourceState & LocalState,
+  Event = SourceEvent | LocalEvent,
+>(
+  config: ViewConfig<SourceState, SourceEvent, LocalState, LocalEvent, State, Event>,
 ): Operator<SourceState, SourceEvent, State, Event> {
   return (source) => new View({ ...config, source });
 }
 
-class View<SourceState, SourceEvent, LocalState, State, Event> extends BasePipeSystem<
-  ViewConfig<SourceState, SourceEvent, LocalState, State, Event>,
+class View<
+  SourceState,
+  SourceEvent,
+  LocalState,
+  LocalEvent,
+  State = SourceState & LocalState,
+  Event = SourceEvent | LocalEvent,
+> extends BasePipeSystem<
+  ViewConfig<SourceState, SourceEvent, LocalState, LocalEvent, State, Event>,
   SourceState,
   SourceEvent,
   State,
@@ -42,8 +80,15 @@ class View<SourceState, SourceEvent, LocalState, State, Event> extends BasePipeS
   }
 }
 
-class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends BasePipeStore<
-  ViewConfig<SourceState, SourceEvent, LocalState, State, Event>,
+class ViewStore<
+  SourceState,
+  SourceEvent,
+  LocalState,
+  LocalEvent,
+  State = SourceState & LocalState,
+  Event = SourceEvent | LocalEvent,
+> extends BasePipeStore<
+  ViewConfig<SourceState, SourceEvent, LocalState, LocalEvent, State, Event>,
   SourceState,
   SourceEvent,
   State,
@@ -85,7 +130,9 @@ class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends Base
         `[${this.constructor.name}] Contract violation: Attempted to emit combined state before receiving an initial source state. Ensure that the source emits an initial state upon initialization.`,
       );
     }
-    const combinedState = this._config.combineState(this._localState, this._sourceState);
+    const combinedState = this._config.combineState
+      ? this._config.combineState(this._sourceState, this._localState)
+      : ({ ...this._sourceState, ...this._localState } as State);
     this._emit(combinedState);
   }
 
@@ -125,16 +172,12 @@ class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends Base
   }
 
   private _processEvent(event: Event, sourceEvents: SourceEvent[]) {
-    if (this._config.toSourceEvent) {
-      const sourceEvent = this._config.toSourceEvent(event, this._localState);
-      if (Array.isArray(sourceEvent)) {
-        sourceEvents.push(...sourceEvent);
-      } else if (sourceEvent !== undefined) {
-        sourceEvents.push(sourceEvent as SourceEvent);
-      }
+    const { source, local } = this._config.mapEvent(event, this._localState);
+    if (source !== undefined) {
+      sourceEvents.push(source);
     }
-    if (this._config.reduceLocal) {
-      const localState = this._config.reduceLocal(this._localState, event);
+    if (local !== undefined) {
+      const localState = this._config.reduceLocal(this._localState, local);
       this._setLocalState(localState);
     }
   }
@@ -144,4 +187,4 @@ class ViewStore<SourceState, SourceEvent, LocalState, State, Event> extends Base
   }
 }
 
-export { ViewConfig, view };
+export { ViewEvent, ViewConfig, view };

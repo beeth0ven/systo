@@ -19,31 +19,28 @@ describe('View', () => {
     type LocalEvent =
       | 'toggleEdit';
 
-    type State = LocalState & SourceState;
-    type Event = LocalEvent | SourceEvent; 
+    type State = SourceState & LocalState;
+    type Event = SourceEvent | LocalEvent; 
 
     it('should handle single and batch dispatches correctly', async () => {
       await runSystemTest<SourceState, SourceEvent, State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
-          view({
-            initialLocalState: { isEditing: false } as LocalState,
-            combineState: (localState, sourceState) => ({ ...localState, ...sourceState }),
-            reduceLocal: (localState, event) => {
-              switch (event) {
-                case 'toggleEdit':
-                  return { isEditing: !localState.isEditing };
-                default:
-                  return localState;
-              }
-            },
-            toSourceEvent: (event) => {
+          view<SourceState, SourceEvent, LocalState, LocalEvent>({
+            initialLocalState: { isEditing: false },
+            mapEvent: (event) => {
               switch (event) {
                 case 'increment':
                 case 'decrement':
-                  return event;
-                default:
-                  return undefined;
+                  return { source: event };
+                case 'toggleEdit':
+                  return { local: event };
+              }
+            },
+            reduceLocal: (localState, localEvent) => {
+              switch (localEvent) {
+                case 'toggleEdit':
+                  return { isEditing: !localState.isEditing };
               }
             },
           })
@@ -102,36 +99,37 @@ describe('View', () => {
       | { type: 'token', chunk: string }
       | { type: 'clear' };
 
-    type State = LocalState & SourceState;
+    type State = SourceState & LocalState;
     type Event = LocalEvent | { type: 'submit' };
 
     it('should accumulate local state sequentially during batching and forward accumulated result', async () => {
       await runSystemTest<SourceState, SourceEvent, State, Event>({
         systemFactory: (mockSource) => pipe(
           mockSource,
-          view({
-            initialLocalState: { buffer: '' } as LocalState,
-            combineState: (localState, sourceState) => ({ ...localState, ...sourceState }),
-            reduceLocal: (localState, event) => {
+          view<SourceState, SourceEvent, LocalState, LocalEvent, State, Event>({
+            initialLocalState: { buffer: '' },
+            combineState: (sourceState, localState) => ({ ...sourceState, ...localState }),
+            mapEvent: (event, localState) => {
               switch (event.type) {
                 case 'token':
-                  return { buffer: localState.buffer + event.chunk };
                 case 'clear':
+                  return { local: event };
                 case 'submit':
+                  return { 
+                    source: { type: 'commit', message: localState.buffer }, 
+                    local: { type: 'clear' } 
+                  };
+              }
+            },
+            reduceLocal: (localState, localEvent) => {
+              switch (localEvent.type) {
+                case 'token':
+                  return { buffer: localState.buffer + localEvent.chunk };
+                case 'clear':
                   return { buffer: '' };
-                default:
-                  return localState;
               }
-            },
-            toSourceEvent: (event, localState) => {
-              switch (event.type) {
-                case 'submit':
-                  return { type: 'commit', message: localState.buffer };
-                default:
-                  return undefined;
-              }
-            },
-          })
+            }
+          }),
         ),
         events: {
           10: [
