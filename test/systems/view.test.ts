@@ -85,7 +85,7 @@ describe('View', () => {
 
   describe('Sequential Batching Accumulation (Token Stream & Commit)', () => {
     type SourceState = {
-      savedMessages: string[];
+      messages: string[];
     };
 
     type SourceEvent = 
@@ -99,7 +99,11 @@ describe('View', () => {
       | { type: 'token', chunk: string }
       | { type: 'clear' };
 
-    type State = SourceState & LocalState;
+    type State = {
+      savedMessages: string[];
+      buffer: string;
+    };
+    
     type Event = LocalEvent | { type: 'submit' };
 
     it('should accumulate local state sequentially during batching and forward accumulated result', async () => {
@@ -108,7 +112,10 @@ describe('View', () => {
           mockSource,
           view<SourceState, SourceEvent, LocalState, LocalEvent, State, Event>({
             initialLocalState: { buffer: '' },
-            combineState: (sourceState, localState) => ({ ...sourceState, ...localState }),
+            combineState: (sourceState, localState) => ({ 
+              savedMessages: sourceState.messages,
+              buffer: localState.buffer,
+            }),
             mapEvent: (event, localState) => {
               switch (event.type) {
                 case 'token':
@@ -135,7 +142,7 @@ describe('View', () => {
           10: [
             ['observe'],
             ['source.observe'],
-            ['source.next', { savedMessages: [] }],
+            ['source.next', { messages: [] }],
             ['next', { savedMessages: [], buffer: '' }],
           ],
           20: [
@@ -153,7 +160,7 @@ describe('View', () => {
               { type: 'submit' },
             ]],
             ['source.dispatch', [{ type: 'commit', message: 'Hello World! 🚀' }]],
-            ['source.next', { savedMessages: ['Hello World! 🚀'] }],
+            ['source.next', { messages: ['Hello World! 🚀'] }],
             ['next', { savedMessages: ['Hello World! 🚀'], buffer: '' }],
           ]
         },
