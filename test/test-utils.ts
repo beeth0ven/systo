@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { expect, vi } from 'vitest';
 import { EventOrEvents, Observer, Store, System } from '../src/core.js';
+import { Log } from './types.js';
 
 type Input<SourceState, Event> =
   | ['observe']
@@ -57,10 +58,11 @@ function isInput<SourceState, SourceEvent, State = SourceState, Event = SourceEv
   return INPUT_TYPES.has(testEvent[0]);
 }
 
+
 interface SystemTestConfig<SourceState, SourceEvent, State = SourceState, Event = SourceEvent> {
   systemFactory: (
     mockSource: System<SourceState, SourceEvent>,
-    log: (message: string) => void,
+    log: Log,
   ) => System<State, Event>;
   events: TimedTestEvents<SourceState, SourceEvent, State, Event>;
 }
@@ -217,6 +219,27 @@ class Tester<SourceState, SourceEvent, State = SourceState, Event = SourceEvent>
   }
 }
 
+type ScenarioEvent<State, Event> = Exclude<
+  TestEvent<never, never, State, Event>,
+  [`source.${string}`, ...unknown[]]
+>;
+
+type TimedScenarioEvents<State, Event> = Record<number, ScenarioEvent<State, Event>[]>;
+
+type ScenarioSystem<State, Event> = 
+  | System<State, Event>
+  | ((log: Log) => System<State, Event>);
+
+function runScenario<State, Event>(
+  system: ScenarioSystem<State, Event>,
+  events: TimedScenarioEvents<State, Event>,
+): Promise<void> {
+  return runSystemTest<never, never, State, Event>({
+    systemFactory: (_, log) => (typeof system === 'function' ? system(log) : system),
+    events: events,
+  });
+}
+
 export { 
   Input, 
   Output, 
@@ -224,5 +247,9 @@ export {
   TimedOutput, 
   SourceDispatchInput, 
   SystemTestConfig, 
-  runSystemTest 
+  runSystemTest,
+  ScenarioEvent,
+  TimedScenarioEvents,
+  ScenarioSystem,
+  runScenario
 };
