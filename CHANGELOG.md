@@ -1,6 +1,31 @@
 # Changelog
 
 
+## v0.1.0-alpha.7
+
+[compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.6...v0.1.0-alpha.7)
+
+### 🚀 Enhancements
+
+- **docs:** Introduce executable test docs and `runScenario` spec runner ([#22](https://github.com/beeth0ven/systo/pull/22))
+
+### 💅 Refactors
+
+- **core:** Extract EventOrEvents type and apply across systems ([#18](https://github.com/beeth0ven/systo/pull/18))
+- **system:** Refine view operator with strict api ([#20](https://github.com/beeth0ven/systo/pull/20))
+
+### 🏡 Chore
+
+- **deps-dev:** Bump vitest from 4.1.12 to 5.1.0 ([#21](https://github.com/beeth0ven/systo/pull/21))
+
+### ✅ Tests
+
+- Align runSystemTest and SystemTestConfig generic parameters with Operator ([#19](https://github.com/beeth0ven/systo/pull/19))
+
+### ❤️ Contributors
+
+- Beeth0ven ([@beeth0ven](https://github.com/beeth0ven))
+
 ## v0.1.0-alpha.6
 
 [compare changes](https://github.com/beeth0ven/systo/compare/v0.1.0-alpha.5...v0.1.0-alpha.6)
